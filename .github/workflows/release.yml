@@ -61,11 +61,11 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          #tagName: autoinvoice-v__VERSION__
-          #releaseName: AutoInvoice v__VERSION__
-          #releaseBody: After installing the Apple app you have to run "xattr -c /Applications/AutoInvoice.app" once before launching
-          #releaseDraft: false
-          #prerelease: false
+          tagName: autoinvoice-v__VERSION__
+          releaseName: AutoInvoice v__VERSION__
+          releaseBody: After installing the Apple app you have to run "xattr -c /Applications/AutoInvoice.app" once before launching
+          releaseDraft: false
+          prerelease: false
           includeUpdaterJson: true
           args: ${{ matrix.args }}
   
@@ -75,10 +75,23 @@ jobs:
     needs: build-tauri
 
     steps:
+      - name: List available artifacts
+        run: |
+          echo "Available artifacts:"
+          ls -la
+          echo "Contents of current directory:"
+          pwd
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+          pattern: '**/*'
+
+      - name: Verify downloaded artifacts
+        run: |
+          echo "Contents of artifacts directory:"
+          ls -la artifacts || echo "Artifacts directory is empty or does not exist"
 
       - name: Install Azure CLI
         run: |
