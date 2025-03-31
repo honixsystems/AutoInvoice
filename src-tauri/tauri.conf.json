@@ -1,5 +1,6 @@
 {
 	"bundle": {
+		"createUpdaterArtifacts": true,
 		"active": true,
 		"targets": "all",
 		"windows": {
@@ -31,14 +32,24 @@
 		"beforeDevCommand": "pnpm dev",
 		"devUrl": "http://localhost:3000"
 	},
-	"productName": "Olivautos",
-	"version": "1.3.0",
-	"identifier": "com.honix.olivautos",
-	"plugins": {},
+	"productName": "AutoInvoice",
+	"version": "1.0.0",
+	"identifier": "com.honix.autoinvoice",
+	"plugins": {
+		"updater": {
+			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQzOUNCMTQ0MjQxQzM3QzMKUldURE54d2tSTEdjMDJBdlIxSXlpOEs0UVdRU0lnWHNrZzJNbDNQbFRYZjIwTnA0TnF1KzNLWEMK",
+			"endpoints": [
+				"https://updater.honix.fr/update"
+			],
+			"windows": {
+				"installMode": "passive"
+			}
+		}
+	},
 	"app": {
 		"windows": [
 			{
-				"title": "Olivautos - Gestion de la facturation",
+				"title": "AutoInvoice - Gestion de la facturation",
 				"width": 1366,
 				"height": 768,
 				"minWidth": 375,

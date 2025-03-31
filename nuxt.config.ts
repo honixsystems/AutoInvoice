@@ -8,7 +8,7 @@ export default defineNuxtConfig({
 	],
 	app: {
 		head: {
-			title: "Olivautos - Gestion de la facturation",
+			title: "AutoInvoice - Gestion de la facturation",
 			charset: "utf-8",
 			viewport: "width=device-width, initial-scale=1",
 			meta: [

@@ -45,7 +45,7 @@ export interface FactureTransport extends FactureBase {
 
 export type Facture = FactureVente | FactureTransport
 
-const STORAGE_DIR = 'olivautos'
+const STORAGE_DIR = 'autoinvoice'
 const VENTES_DIR = `${STORAGE_DIR}/ventes`
 const TRANSPORTS_DIR = `${STORAGE_DIR}/transports`
 

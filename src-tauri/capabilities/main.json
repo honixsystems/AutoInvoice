@@ -43,7 +43,7 @@
 			"identifier": "fs:scope",
 			"allow": [
 				{
-					"path": "$APPDATA/olivautos/**/*"
+					"path": "$APPDATA/autoinvoice/**/*"
 				}
 			]
 		},
