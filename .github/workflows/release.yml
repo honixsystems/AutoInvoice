@@ -74,9 +74,15 @@ jobs:
       - name: List artifacts
         run: |
           echo "Artifacts:"
-          ls -la
+          tree src-tauri/target
           echo "Contents of current directory:"
           pwd
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifacts
+          path: src-tauri/target
 
   
   upload-to-azure:
@@ -85,12 +91,11 @@ jobs:
     needs: build-tauri
 
     steps:
-      - name: Download artifacts from tauri-action
+      - name: Download artifacts from build-tauri job
         uses: actions/download-artifact@v4
         with:
-          path: artifacts
-          pattern: '**/*'
-          name: ${{ needs.build-tauri.outputs.artifactPaths }}
+          name: artifacts
+          path: src-tauri/target
 
       - name: Verify downloaded artifacts
         run: |
