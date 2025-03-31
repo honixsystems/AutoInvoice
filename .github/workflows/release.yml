@@ -71,13 +71,6 @@ jobs:
           includeUpdaterJson: true
           args: ${{ matrix.args }}
 
-      - name: List artifacts
-        run: |
-          echo "Artifacts:"
-          tree src-tauri/target
-          echo "Contents of current directory:"
-          pwd
-
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
