@@ -55,7 +55,9 @@ jobs:
       - name: Install frontend deps
         run: pnpm install
 
-      - uses: tauri-apps/tauri-action@v0.5.20
+      - name: Build and release Tauri app
+        id: tauri
+        uses: tauri-apps/tauri-action@v0.5.20
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
@@ -68,6 +70,14 @@ jobs:
           prerelease: false
           includeUpdaterJson: true
           args: ${{ matrix.args }}
+
+      - name: List artifacts
+        run: |
+          echo "Artifacts:"
+          ls -la
+          echo "Contents of current directory:"
+          pwd
+
   
   upload-to-azure:
     name: Upload to Azure Blob
@@ -75,18 +85,12 @@ jobs:
     needs: build-tauri
 
     steps:
-      - name: List available artifacts
-        run: |
-          echo "Available artifacts:"
-          ls -la
-          echo "Contents of current directory:"
-          pwd
-
-      - name: Download all artifacts
+      - name: Download artifacts from tauri-action
         uses: actions/download-artifact@v4
         with:
           path: artifacts
           pattern: '**/*'
+          name: ${{ needs.build-tauri.outputs.artifactPaths }}
 
       - name: Verify downloaded artifacts
         run: |
