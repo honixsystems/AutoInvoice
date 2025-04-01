@@ -7,6 +7,9 @@ on:
 
 jobs:
   build-tauri:
+    outputs:
+      releaseId: ${{ steps.tauri.outputs.releaseId }}
+      appVersion: ${{ steps.tauri.outputs.appVersion }}
     permissions:
       contents: write
     strategy:
@@ -19,9 +22,9 @@ jobs:
           #- platform: macos-latest
           #  args: --target x86_64-apple-darwin
           #  artifact: macos-x64
-          #- platform: ubuntu-22.04
-          #  args: ""
-          #  artifact: linux
+          - platform: ubuntu-22.04
+            args: ""
+            artifact: linux
           #- platform: windows-latest
           #  args: ""
           #  artifact: windows
@@ -69,14 +72,8 @@ jobs:
           releaseDraft: false
           prerelease: false
           includeUpdaterJson: true
+          includeDebug: true
           args: ${{ matrix.args }}
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-${{ matrix.artifact }}
-          path: 
-
   
   upload-to-azure:
     name: Upload to Azure Blob
@@ -84,37 +81,59 @@ jobs:
     needs: build-tauri
 
     steps:
-      - name: Download artifacts from build-tauri job
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-
-      - name: Verify downloaded artifacts
+      - name: Log the release id
         run: |
-          echo "Contents of artifacts directory:"
-          ls -la artifacts || echo "Artifacts directory is empty or does not exist"
+          echo "Release ID: ${{ needs.build-tauri.outputs.releaseId }}"
+
+      - name: Download from the release
+        uses: robinraju/release-downloader@v1.12
+        with:
+          latest: true
+          fileName: '*'
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Azure CLI
         run: |
           curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
-      - name: Upload updater files to Azure
+      - name: Create the current version folder
+        run: |
+          az storage directory create \
+            --account-name "$AZURE_STORAGE_ACCOUNT" \
+            --account-key "$AZURE_STORAGE_KEY" \
+            --container-name autoinvoice-releases \
+            --name "autoinvoice-releases/autoinvoice-${{ needs.build-tauri.outputs.appVersion }}"
+
+      - name: Upload to Azure Blob Storage
         env:
           AZURE_STORAGE_ACCOUNT: ${{ secrets.AZURE_STORAGE_ACCOUNT_NAME }}
           AZURE_STORAGE_KEY: ${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }}
         run: |
-          find artifacts -name "*.zip" -exec echo "Found:" {} \;
-          find artifacts -name "latest.json" -exec echo "Found:" {} \;
-
-          for file in $(find artifacts -name "*.zip" -o -name "latest.json"); do
+          # Upload all downloaded files without latest.json to Azure Blob Storage
+          for file in $(find . -type f ! -name "latest.json"); do
             filename=$(basename "$file")
-            echo "Uploading $filename..."
+            echo "Uploading $filename to Azure Blob Storage..."
             az storage blob upload \
               --account-name "$AZURE_STORAGE_ACCOUNT" \
               --account-key "$AZURE_STORAGE_KEY" \
-              --container-name releases \
-              --name releases/$filename \
+              --container-name autoinvoice-releases \
+              --name "autoinvoice-releases/autoinvoice-${{ needs.build-tauri.outputs.appVersion }}/$filename" \
               --file "$file" \
               --overwrite
           done
-          
+
+      - name: Sed latest.json to replace the GitHub release URL with the Azure Blob Storage URL
+        run: |
+          export VERSION=${{ needs.build-tauri.outputs.appVersion }}
+          sed -i 's|https://github.com/honixsystems/AutoInvoice/releases/download/autoinvoice-${{ needs.build-tauri.outputs.appVersion }}|https://autohubs3.blob.core.windows.net/autoinvoice-releases/autoinvoice-${{ needs.build-tauri.outputs.appVersion }}|' latest.json
+
+
+      - name: Upload latest.json to Azure Blob Storage
+        run: |
+          az storage blob upload \
+            --account-name "$AZURE_STORAGE_ACCOUNT" \
+            --account-key "$AZURE_STORAGE_KEY" \
+            --container-name autoinvoice-releases \
+            --name "autoinvoice-releases/latest.json" \
+            --file "latest.json" \
+            --overwrite
