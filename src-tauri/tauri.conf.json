@@ -39,7 +39,7 @@
 		"updater": {
 			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQzOUNCMTQ0MjQxQzM3QzMKUldURE54d2tSTEdjMDJBdlIxSXlpOEs0UVdRU0lnWHNrZzJNbDNQbFRYZjIwTnA0TnF1KzNLWEMK",
 			"endpoints": [
-				"https://updater.honix.fr/update"
+				"https://autohubs3.blob.core.windows.net/autoinvoice-releases/"
 			],
 			"windows": {
 				"installMode": "passive"

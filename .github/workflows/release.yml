@@ -81,14 +81,10 @@ jobs:
     needs: build-tauri
 
     steps:
-      - name: Log the release id
-        run: |
-          echo "Release ID: ${{ needs.build-tauri.outputs.releaseId }}"
-
       - name: Download from the release
         uses: robinraju/release-downloader@v1.12
         with:
-          latest: true
+          releaseId: ${{ needs.build-tauri.outputs.releaseId }}
           fileName: '*'
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -106,15 +102,14 @@ jobs:
               --account-name "autohubs3" \
               --account-key "${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }}" \
               --container-name autoinvoice-releases \
-              --name "autoinvoice-releases/autoinvoice-${{ needs.build-tauri.outputs.appVersion }}/$filename" \
+              --name "autoinvoice-v${{ needs.build-tauri.outputs.appVersion }}/$filename" \
               --file "$file" \
               --overwrite
           done
 
       - name: Sed latest.json to replace the GitHub release URL with the Azure Blob Storage URL
         run: |
-          export VERSION=${{ needs.build-tauri.outputs.appVersion }}
-          sed -i 's|https://github.com/honixsystems/AutoInvoice/releases/download/autoinvoice-${{ needs.build-tauri.outputs.appVersion }}|https://autohubs3.blob.core.windows.net/autoinvoice-releases/autoinvoice-${{ needs.build-tauri.outputs.appVersion }}|' latest.json
+          sed -i 's|https://github.com/honixsystems/AutoInvoice/releases/download/autoinvoice-v${{ needs.build-tauri.outputs.appVersion }}|https://autohubs3.blob.core.windows.net/autoinvoice-releases/autoinvoice-v${{ needs.build-tauri.outputs.appVersion }}|' latest.json
 
 
       - name: Upload latest.json to Azure Blob Storage
@@ -123,6 +118,6 @@ jobs:
             --account-name "autohubs3" \
             --account-key "${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }}" \
             --container-name autoinvoice-releases \
-            --name "autoinvoice-releases/latest.json" \
+            --name "latest.json" \
             --file "latest.json" \
             --overwrite
