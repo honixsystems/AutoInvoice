@@ -48,6 +48,9 @@
       "allow": [
         {
           "path": "$APPDATA/autoinvoice/**/*"
+        },
+        {
+          "path": "$APPDATA/*"
         }
       ]
     },

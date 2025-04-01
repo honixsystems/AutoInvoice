@@ -2,16 +2,11 @@
   <div class="invoice-template">
     <div class="header">
       <div class="header-left">
-        <img src="/images/logo.png" alt="Logo Olivautos" class="logo">
+        <CompanyLogo />
         <h1>FACTURE DE TRANSPORT</h1>
       </div>
       <div class="header-right">
-        <div class="company-info">
-          <h2>Olivautos</h2>
-          <p>Rue de la Royale Harmonie, 23</p>
-          <p>1420 Braine-l'Alleud</p>
-          <p>Tél: 0472 54 15 00</p>
-        </div>
+        <CompanyInfo />
       </div>
     </div>
 
@@ -36,15 +31,15 @@
       <table>
         <tr>
           <td>Distance</td>
-          <td>{{ data.distance }} km</td>
-          <td>{{ data.pricePerKm }} €/km</td>
-          <td>{{ (data.distance * data.pricePerKm).toFixed(2) }} €</td>
+          <td>{{ data.distance || 0 }} km</td>
+          <td>{{ data.pricePerKm || 0 }} €/km</td>
+          <td>{{ ((data.distance || 0) * (data.pricePerKm || 0)).toFixed(2) }} €</td>
         </tr>
-        <tr v-if="data.pickupPrice > 0">
+        <tr v-if="(data.pickupPrice || 0) > 0">
           <td>Prise en charge</td>
           <td>-</td>
           <td>-</td>
-          <td>{{ data.pickupPrice.toFixed(2) }} €</td>
+          <td>{{ (data.pickupPrice || 0).toFixed(2) }} €</td>
         </tr>
       </table>
       <div class="total">
@@ -58,14 +53,15 @@
 
     <div class="footer">
       <p>Conditions de paiement par virement bancaire</p>
-      <p>Numéro de compte: BE00 0000 0000 0000</p>
-      <p>Pour toute question, veuillez nous contacter au 0472 54 15 00</p>
+      <p>Numéro de compte: {{ settings?.accountNumber }}</p>
+      <p v-if="settings?.footerNote">{{ settings.footerNote }}</p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted } from 'vue'
+import { Store } from '@tauri-apps/plugin-store'
 
 interface TransportData {
   clientName?: string
@@ -82,9 +78,33 @@ interface TransportData {
   additionalNotes?: string
 }
 
+interface CompanySettings {
+  companyName: string
+  accountNumber: string
+  phoneNumber: string
+  address: string
+  footerNote?: string
+  primaryColor: string
+  vatRate: number
+}
+
 const props = defineProps<{
   data: TransportData
 }>()
+
+const settings = ref<CompanySettings | null>(null)
+
+onMounted(async () => {
+  try {
+    const store = await Store.load('company-settings.json')
+    const savedSettings = await store.get('settings') as CompanySettings | null
+    if (savedSettings) {
+      settings.value = savedSettings
+    }
+  } catch (error) {
+    console.error('Erreur lors du chargement des paramètres:', error)
+  }
+})
 
 const formattedNotes = computed(() => {
   return props.data.additionalNotes?.replace(/\n/g, '<br>') || ''
@@ -119,7 +139,7 @@ const total = computed(() => {
   align-items: flex-start;
   margin-bottom: 40px;
   padding-bottom: 20px;
-  border-bottom: 2px solid #EC6714;
+  border-bottom: 2px solid v-bind('settings?.primaryColor || "#EC6714"');
 }
 
 .header-left {
@@ -142,18 +162,6 @@ h1 {
   font-weight: 600;
 }
 
-.company-info h2 {
-  color: #EC6714;
-  font-size: 24px;
-  margin: 0 0 10px 0;
-}
-
-.company-info p {
-  margin: 3px 0;
-  color: #666;
-  line-height: 1.3;
-}
-
 .client-info, .transport-details {
   background: #f8f9fa;
   padding: 20px;
@@ -162,7 +170,7 @@ h1 {
 }
 
 h3 {
-  color: #EC6714;
+  color: v-bind('settings?.primaryColor || "#EC6714"');
   font-size: 18px;
   margin: 0 0 15px 0;
   font-weight: 600;
@@ -199,7 +207,7 @@ td:last-child {
   padding: 15px;
   background: #f8f9fa;
   border-radius: 8px;
-  border-left: 4px solid #EC6714;
+  border-left: 4px solid v-bind('settings?.primaryColor || "#EC6714"');
 }
 
 .additional-notes {
@@ -207,7 +215,7 @@ td:last-child {
   padding: 15px;
   background: #f8f9fa;
   border-radius: 8px;
-  border-left: 4px solid #EC6714;
+  border-left: 4px solid v-bind('settings?.primaryColor || "#EC6714"');
 }
 
 .additional-notes p {

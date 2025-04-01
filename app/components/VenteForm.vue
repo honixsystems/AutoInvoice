@@ -287,7 +287,7 @@ const generateInvoice = async () => {
         color: 'success'
       })
     } else {
-      await addFacture(factureData)
+      //await addFacture(factureData)
       toast.add({
         title: 'Succès',
         description: 'La facture a été créée avec succès.',

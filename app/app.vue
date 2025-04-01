@@ -2,6 +2,7 @@
 import { useHead } from '#imports'
 import { check, Update } from '@tauri-apps/plugin-updater'
 import { relaunch } from '@tauri-apps/plugin-process'
+import { Store } from '@tauri-apps/plugin-store'
 
 interface UpdateResult {
 	version: string
@@ -23,14 +24,21 @@ const totalSize = ref(0)
 
 onMounted(async () => {
 	try {
-		const update = await check()
-		if (update) {
-			updateInfo.value = {
-				version: update.version || 'N/A',
-				date: update.date || 'N/A',
-				body: update.body || '',
+		// Vérifier les paramètres d'auto-update
+		const store = await Store.load('app-settings.json')
+		const settings = await store.get('settings')
+		const autoUpdate = settings?.autoUpdate ?? true // Par défaut true si non défini
+
+		if (autoUpdate) {
+			const update = await check()
+			if (update) {
+				updateInfo.value = {
+					version: update.version || 'N/A',
+					date: update.date || 'N/A',
+					body: update.body || '',
+				}
+				showUpdateModal.value = true
 			}
-			showUpdateModal.value = true
 		}
 	} catch (error) {
 		console.error('Error checking for updates:', error)

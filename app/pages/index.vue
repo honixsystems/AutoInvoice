@@ -26,8 +26,22 @@ const navigateTo = (type: 'transport' | 'vente') => {
 <template>
   <div class="min-h-screen">
     <div class="container mx-auto px-4 py-8">
+      <div class="flex justify-end mb-8">
+        <UButton
+          color="neutral"
+          variant="soft"
+          to="/settings"
+          size="sm"
+        >
+          <UIcon name="i-heroicons-cog-6-tooth" class="mr-2" />
+          Paramètres
+        </UButton>
+      </div>
+
       <div class="text-center mb-12">
-        <img src="/images/logo.png" alt="Logo Olivautos" class="mx-auto mb-8 max-w-xs">
+        <div class="flex justify-center mb-4">
+          <CompanyLogo />
+        </div>
         <h1 class="text-4xl font-bold text-gray-900 mb-4">Gestion des Factures</h1>
         <p class="text-lg text-gray-600">Sélectionnez le type de facture à générer</p>
       </div>

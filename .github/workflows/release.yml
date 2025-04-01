@@ -58,6 +58,15 @@ jobs:
       - name: Install frontend deps
         run: pnpm install
 
+      - name: Extract changelog
+        id: changelog
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          CHANGELOG=$(awk -v ver="$VERSION" '/^## \[.*\]/{p=($2=="["ver"]")}p' CHANGELOG.md | tail -n +2 | sed '/^##/q' | sed '$d')
+          echo "CHANGELOG<<EOF" >> $GITHUB_ENV
+          echo "$CHANGELOG" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
       - name: Build and release Tauri app
         id: tauri
         uses: tauri-apps/tauri-action@v0.5.20
@@ -65,10 +74,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          CHANGELOG: ${{ steps.changelog.outputs.CHANGELOG }}
         with:
           tagName: autoinvoice-v__VERSION__
           releaseName: AutoInvoice v__VERSION__
-          releaseBody: After installing the Apple app you have to run "xattr -c /Applications/AutoInvoice.app" once before launching
+          releaseBody: ${{ env.CHANGELOG }}
           releaseDraft: false
           prerelease: false
           includeUpdaterJson: true

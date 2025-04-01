@@ -2,16 +2,11 @@
   <div class="invoice-template">
     <div class="header">
       <div class="header-left">
-        <img src="/images/logo.png" alt="Logo Olivautos" class="logo">
+        <CompanyLogo />
         <h1>FACTURE DE VENTE</h1>
       </div>
       <div class="header-right">
-        <div class="company-info">
-          <h2>Olivautos</h2>
-          <p>Rue de la Royale Harmonie, 23</p>
-          <p>1420 Braine-l'Alleud</p>
-          <p>Tél: 0472 54 15 00</p>
-        </div>
+        <CompanyInfo />
       </div>
     </div>
 
@@ -77,18 +72,18 @@
         <tr>
           <td>Véhicule</td>
           <td>{{ data.vehicleBrand }} {{ data.vehicleModel }}</td>
-          <td>{{ data.vehiclePrice.toFixed(2) }} €</td>
+          <td>{{ (data.vehiclePrice || 0).toFixed(2) }} €</td>
         </tr>
       </table>
       <div class="total">
-        <p v-if="data.deposit > 0" class="deposit-info">Acompte reçu : {{ data.deposit.toFixed(2) }} €</p>
+        <p v-if="(data.deposit || 0) > 0" class="deposit-info">Acompte reçu : {{ (data.deposit || 0).toFixed(2) }} €</p>
         <div class="price-details">
           <div class="price-row">
             <span class="label">Montant HT:</span>
             <span class="value">{{ priceDetails.priceHT }}</span>
           </div>
           <div class="price-row">
-            <span class="label">TVA (21%):</span>
+            <span class="label">TVA ({{ settings?.vatRate || 21 }}%):</span>
             <span class="value">{{ priceDetails.tva }}</span>
           </div>
           <div class="price-row total-row">
@@ -105,13 +100,16 @@
 
     <div class="footer">
       <p>Conditions de paiement par virement bancaire</p>
-      <p>Numéro de compte: BE00 0000 0000 0000</p>
-      <p>Pour toute question, veuillez nous contacter au 0472 54 15 00</p>
+      <p>Numéro de compte: {{ settings?.accountNumber }}</p>
+      <p v-if="settings?.footerNote">{{ settings.footerNote }}</p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed, ref, onMounted } from 'vue'
+import { Store } from '@tauri-apps/plugin-store'
+
 interface VenteData {
   clientName?: string
   clientPhone?: string
@@ -130,9 +128,33 @@ interface VenteData {
   additionalNotes?: string
 }
 
+interface CompanySettings {
+  companyName: string
+  accountNumber: string
+  phoneNumber: string
+  address: string
+  footerNote?: string
+  primaryColor: string
+  vatRate: number
+}
+
 const props = defineProps<{
   data: VenteData
 }>()
+
+const settings = ref<CompanySettings | null>(null)
+
+onMounted(async () => {
+  try {
+    const store = await Store.load('company-settings.json')
+    const savedSettings = await store.get('settings') as CompanySettings | null
+    if (savedSettings) {
+      settings.value = savedSettings
+    }
+  } catch (error) {
+    console.error('Erreur lors du chargement des paramètres:', error)
+  }
+})
 
 const formattedNotes = computed(() => {
   return props.data.additionalNotes?.replace(/\n/g, '<br>') || ''
@@ -140,11 +162,6 @@ const formattedNotes = computed(() => {
 
 const formattedAddress = computed(() => {
   return props.data.clientAddress?.replace(/\n/g, '<br>') || ''
-})
-
-const total = computed(() => {
-  const price = props.data.vehiclePrice || 0
-  return price.toFixed(2)
 })
 
 const formattedDate = computed(() => {
@@ -155,7 +172,8 @@ const formattedDate = computed(() => {
 const priceDetails = computed(() => {
   const price = props.data.vehiclePrice || 0
   const deposit = props.data.deposit || 0
-  const priceHT = price / 1.21
+  const vatRate = settings.value?.vatRate || 21
+  const priceHT = price / (1 + vatRate / 100)
   const tva = price - priceHT
 
   return {
@@ -184,7 +202,7 @@ const priceDetails = computed(() => {
   align-items: flex-start;
   margin-bottom: 40px;
   padding-bottom: 20px;
-  border-bottom: 2px solid #EC6714;
+  border-bottom: 2px solid v-bind('settings?.primaryColor || "#EC6714"');
 }
 
 .header-left {
@@ -207,18 +225,6 @@ h1 {
   font-weight: 600;
 }
 
-.company-info h2 {
-  color: #EC6714;
-  font-size: 24px;
-  margin: 0 0 10px 0;
-}
-
-.company-info p {
-  margin: 3px 0;
-  color: #666;
-  line-height: 1.3;
-}
-
 .client-info, .vehicle-info {
   background: #f8f9fa;
   padding: 20px;
@@ -227,7 +233,7 @@ h1 {
 }
 
 h3 {
-  color: #EC6714;
+  color: v-bind('settings?.primaryColor || "#EC6714"');
   font-size: 18px;
   margin: 0 0 15px 0;
   font-weight: 600;
@@ -271,7 +277,7 @@ td:last-child {
   padding: 15px;
   background: #f8f9fa;
   border-radius: 8px;
-  border-left: 4px solid #EC6714;
+  border-left: 4px solid v-bind('settings?.primaryColor || "#EC6714"');
 }
 
 .footer {
@@ -288,11 +294,11 @@ td:last-child {
   padding: 20px;
   background: #f8f9fa;
   border-radius: 8px;
-  border-left: 4px solid #EC6714;
+  border-left: 4px solid v-bind('settings?.primaryColor || "#EC6714"');
 }
 
 .additional-notes h3 {
-  color: #EC6714;
+  color: v-bind('settings?.primaryColor || "#EC6714"');
   font-size: 18px;
   margin: 0 0 15px 0;
   font-weight: 600;
@@ -394,6 +400,6 @@ td:last-child {
 }
 
 .total-row .value {
-  color: #EC6714;
+  color: v-bind('settings?.primaryColor || "#EC6714"');
 }
 </style> 

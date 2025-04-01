@@ -12,21 +12,21 @@
 	--color-warning: var(--ui-color-warning-500);
 	--color-error: var(--ui-color-error-500);
 
-	--ui-color-primary: var(--color-olivautos-500);
+	--ui-color-primary: var(--color-customtheme-500);
 }
 
 :root {
-	--color-olivautos-50: #FFD1B8;
-	--color-olivautos-100: #FFC4A3;
-	--color-olivautos-200: #FFAA7A;
-	--color-olivautos-300: #FF8F52;
-	--color-olivautos-400: #FF7529;
-	--color-olivautos-500: #FF5B00;
-	--color-olivautos-600: #C74700;
-	--color-olivautos-700: #8F3300;
-	--color-olivautos-800: #571F00;
-	--color-olivautos-900: #1F0B00;
-	--color-olivautos-950: #030100;
+	--color-customtheme-50: #FFD1B8;
+	--color-customtheme-100: #FFC4A3;
+	--color-customtheme-200: #FFAA7A;
+	--color-customtheme-300: #FF8F52;
+	--color-customtheme-400: #FF7529;
+	--color-customtheme-500: #FF5B00;
+	--color-customtheme-600: #C74700;
+	--color-customtheme-700: #8F3300;
+	--color-customtheme-800: #571F00;
+	--color-customtheme-900: #1F0B00;
+	--color-customtheme-950: #030100;
 }
 
 body {
