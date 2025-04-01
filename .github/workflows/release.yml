@@ -97,17 +97,14 @@ jobs:
           curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
       - name: Upload to Azure Blob Storage
-        env:
-          AZURE_STORAGE_ACCOUNT: ${{ secrets.AZURE_STORAGE_ACCOUNT_NAME }}
-          AZURE_STORAGE_KEY: ${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }}
         run: |
           # Upload all downloaded files without latest.json to Azure Blob Storage
-          for file in $(find ./AutoInvoice -type f ! -name "latest.json"); do
+          for file in $(find . -type f ! -name "latest.json"); do
             filename=$(basename "$file")
             echo "Uploading $filename to Azure Blob Storage..."
             az storage blob upload \
-              --account-name "$AZURE_STORAGE_ACCOUNT" \
-              --account-key "$AZURE_STORAGE_KEY" \
+              --account-name "autohubs3" \
+              --account-key "${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }}" \
               --container-name autoinvoice-releases \
               --name "autoinvoice-releases/autoinvoice-${{ needs.build-tauri.outputs.appVersion }}/$filename" \
               --file "$file" \
@@ -123,9 +120,9 @@ jobs:
       - name: Upload latest.json to Azure Blob Storage
         run: |
           az storage blob upload \
-            --account-name "$AZURE_STORAGE_ACCOUNT" \
-            --account-key "$AZURE_STORAGE_KEY" \
+            --account-name "autohubs3" \
+            --account-key "${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }}" \
             --container-name autoinvoice-releases \
             --name "autoinvoice-releases/latest.json" \
-            --file "./AutoInvoice/latest.json" \
+            --file "latest.json" \
             --overwrite
