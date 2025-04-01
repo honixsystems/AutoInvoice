@@ -12,50 +12,30 @@ interface UpdateResult {
 const props = defineProps<{
   show: boolean
   update: UpdateResult | null
+  progress: number
+  totalSize: number
 }>()
 
 const emit = defineEmits<{
   (e: 'update:show', value: boolean): void
+  (e: 'update'): void
 }>()
 
 const downloading = ref(false)
-const progress = ref(0)
 
-const handleUpdate = async () => {
-  if (!props.update) return
-  
+const handleUpdate = () => {
   downloading.value = true
-  let downloaded = 0
-  let contentLength = 0
-
-  try {
-    await props.update.downloadAndInstall((event) => {
-      switch (event.event) {
-        case 'Started':
-          contentLength = event.data?.contentLength || 0
-          console.log(`started downloading ${event.data?.contentLength} bytes`)
-          break
-        case 'Progress':
-          downloaded += event.data?.chunkLength || 0
-          progress.value = (downloaded / contentLength) * 100
-          console.log(`downloaded ${downloaded} from ${contentLength}`)
-          break
-        case 'Finished':
-          console.log('download finished')
-          break
-      }
-    })
-
-    console.log('update installed')
-    await relaunch()
-  } catch (error) {
-    console.error('Error during update:', error)
-  }
+  emit('update')
 }
 
 const closeModal = () => {
   emit('update:show', false)
 }
+
+const progressPercentage = computed(() => {
+  if (props.totalSize === 0) return 0
+  return (props.progress / props.totalSize) * 100
+})
 </script>
 
 <template>
@@ -82,9 +62,9 @@ const closeModal = () => {
         </div>
 
         <div v-if="downloading" class="space-y-2">
-          <UProgress :value="progress" />
+          <UProgress :value="progressPercentage" />
           <p class="text-sm text-gray-500 dark:text-gray-400">
-            Téléchargement en cours... {{ Math.round(progress) }}%
+            Téléchargement en cours... {{ Math.round(progressPercentage) }}%
           </p>
         </div>
 
