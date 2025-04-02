@@ -14,7 +14,7 @@ const facturesTransport = computed(() => factures.value.filter(f => f.type === '
 onMounted(async () => {
   try {
     isLoading.value = true
-    loadFactures()
+    await loadFactures()
   } catch (e) {
     error.value = 'Erreur lors du chargement des factures'
     console.error('Erreur lors du chargement des factures:', e)

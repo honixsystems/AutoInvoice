@@ -3,24 +3,21 @@
     <UStepper disabled v-model="currentStep" :items="steps" class="w-full">
       <template #client>
         <div class="space-y-4 w-full">
-          <h2 class="text-xl font-semibold mb-4">Informations du client</h2>
-          <UForm ref="clientFormRef" :schema="clientSchema" :state="state" class="space-y-4 w-full">
-            <UFormField label="Nom du client" name="clientName">
-              <UInput v-model="state.clientName" placeholder="Nom complet" class="w-full" />
-            </UFormField>
-            <UFormField label="Téléphone" name="clientPhone">
-              <UInput v-model="state.clientPhone" placeholder="Numéro de téléphone" class="w-full" />
-            </UFormField>
-            <UFormField label="Email" name="clientEmail">
-              <UInput v-model="state.clientEmail" type="email" placeholder="Adresse email" class="w-full" />
-            </UFormField>
-            <UFormField label="Adresse" name="clientAddress">
-              <UTextarea v-model="state.clientAddress" placeholder="Adresse complète" class="w-full" />
-            </UFormField>
-            <UFormField label="Numéro de TVA" name="clientVAT">
-              <UInput v-model="state.clientVAT" placeholder="Numéro de TVA" class="w-full" />
-            </UFormField>
-          </UForm>
+          <ClientSelect 
+            v-model="selectedClientId" 
+            @edit-client="isEditingClient = true"
+            @update:modelValue="(val) => { 
+              selectedClientId = val;
+              showClientForm = !val;
+              isEditingClient = false;
+            }"
+          />
+          <USeparator v-if="showClientForm || isEditingClient" label="OU" />
+          <ClientForm 
+            v-if="showClientForm || isEditingClient" 
+            v-model="selectedClientId" 
+            ref="clientFormRef" 
+          />
         </div>
       </template>
 
@@ -85,7 +82,7 @@
         class="w-full flex justify-center items-center"
         v-if="currentStep > 0"
         color="neutral"
-        variant="outline"
+        variant="ghost"
         @click="prevStep"
       >
         Précédent
@@ -140,6 +137,14 @@ const props = defineProps<{
   factureId?: string
 }>()
 
+defineShortcuts({
+  'Enter': () => {
+    if (currentStep.value < 2) {
+      nextStep()
+    }
+  }
+})
+
 const { addFacture, updateFacture, getFacture } = useFactures()
 
 const clientSchema = z.object({
@@ -193,6 +198,9 @@ const showPreview = ref(false)
 const clientFormRef = ref()
 const vehicleFormRef = ref()
 const priceFormRef = ref()
+const selectedClientId = ref<string>()
+const showClientForm = ref(true)
+const isEditingClient = ref(false)
 
 const steps: StepperItem[] = [
   {
@@ -225,26 +233,10 @@ const toast = useToast()
 // Charger la facture existante si un ID est fourni
 onMounted(async () => {
   if (props.factureId) {
-    const facture = getFacture(props.factureId)
+    const facture = await getFacture(props.factureId)
     if (facture && facture.type === 'vente') {
       // Copier toutes les propriétés de la facture dans l'état
-      Object.assign(state, {
-        clientName: facture.clientName,
-        clientPhone: facture.clientPhone,
-        clientEmail: facture.clientEmail,
-        clientAddress: facture.clientAddress,
-        clientVAT: facture.clientVAT,
-        vehicleBrand: facture.vehicleBrand,
-        vehicleModel: facture.vehicleModel,
-        vehicleChassis: facture.vehicleChassis,
-        vehicleMileage: facture.vehicleMileage,
-        vehicleColor: facture.vehicleColor,
-        vehicleType: facture.vehicleType,
-        vehicleFirstRegistration: facture.vehicleFirstRegistration,
-        vehiclePrice: facture.vehiclePrice,
-        deposit: facture.deposit,
-        additionalNotes: facture.additionalNotes
-      })
+      Object.assign(state, facture)
     }
   }
 })
@@ -262,6 +254,7 @@ const generateInvoice = async () => {
   try {
     const factureData: Omit<FactureVente, 'id' | 'dateCreation' | 'dateModification'> = {
       type: 'vente',
+      clientId: selectedClientId.value,
       clientName: state.clientName!,
       clientPhone: state.clientPhone,
       clientEmail: state.clientEmail,
@@ -287,7 +280,7 @@ const generateInvoice = async () => {
         color: 'success'
       })
     } else {
-      //await addFacture(factureData)
+      await addFacture(factureData)
       toast.add({
         title: 'Succès',
         description: 'La facture a été créée avec succès.',
@@ -360,7 +353,11 @@ const nextStep = async () => {
   
   switch (currentStep.value) {
     case 0:
-      isValid = await clientFormRef.value?.validate()
+      if (isEditingClient.value || showClientForm.value) {
+        isValid = await clientFormRef.value?.validate()
+        if (!isValid) return // On regarde directement ici car c'est a ce moment que le client est créé / modifié
+        await clientFormRef.value?.submitForm()
+      }
       break
     case 1:
       isValid = await vehicleFormRef.value?.validate()

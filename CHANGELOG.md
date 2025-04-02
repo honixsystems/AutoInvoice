@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.1] - 2025-04-02
+
+- Ajout du bouton de modification du client
+- Ajout du bouton de suppression du client
+- Ajout du bouton de création du client
+- Ajout du bouton de modification du véhicule
+- Ajout du bouton de suppression du véhicule
+
 ## [1.1.0] - 2025-04-01
 
 - Ajout des paramètres de l'application

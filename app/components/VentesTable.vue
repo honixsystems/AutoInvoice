@@ -53,19 +53,77 @@ const handleDeleteConfirm = () => {
 const columns: TableColumn<FactureVente>[] = [
   {
     accessorKey: 'clientName',
-    header: 'Client'
+    header: ({ column }) => {
+      const isSorted = column.getIsSorted()
+      return h(UButton, {
+        color: 'neutral',
+        variant: 'ghost',
+        label: 'Client',
+        icon: isSorted
+          ? isSorted === 'asc'
+            ? 'i-lucide-arrow-up-narrow-wide'
+            : 'i-lucide-arrow-down-wide-narrow'
+          : 'i-lucide-arrow-up-down',
+        class: '-mx-2.5',
+        onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
+      })
+    }
   },
   {
     accessorKey: 'vehicleBrand',
-    header: 'Marque'
+    header: ({ column }) => {
+      const isSorted = column.getIsSorted()
+      return h(UButton, {
+        color: 'neutral',
+        variant: 'ghost',
+        label: 'Marque',
+        icon: isSorted
+          ? isSorted === 'asc'
+            ? 'i-lucide-arrow-up-narrow-wide'
+            : 'i-lucide-arrow-down-wide-narrow'
+          : 'i-lucide-arrow-up-down',
+        class: '-mx-2.5',
+        onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
+      })
+    }
   },
   {
     accessorKey: 'vehicleModel',
-    header: 'Modèle'
+    header: ({ column }) => {
+      const isSorted = column.getIsSorted()
+      return h(UButton, {
+        color: 'neutral',
+        variant: 'ghost',
+        label: 'Modèle',
+        icon: isSorted
+          ? isSorted === 'asc'
+            ? 'i-lucide-arrow-up-narrow-wide'
+            : 'i-lucide-arrow-down-wide-narrow'
+          : 'i-lucide-arrow-up-down',
+        class: '-mx-2.5',
+        onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
+      })
+    }
   },
   {
     accessorKey: 'vehiclePrice',
-    header: () => h('div', { class: 'text-right' }, 'Prix'),
+    header: ({ column }) => {
+      const isSorted = column.getIsSorted()
+      return h('div', { class: 'flex justify-end' }, [
+        h(UButton, {
+          color: 'neutral',
+          variant: 'ghost',
+          label: 'Prix',
+          icon: isSorted
+            ? isSorted === 'asc'
+              ? 'i-lucide-arrow-up-narrow-wide'
+              : 'i-lucide-arrow-down-wide-narrow'
+            : 'i-lucide-arrow-up-down',
+          class: '-mx-2.5',
+          onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
+        })
+      ])
+    },
     cell: ({ row }) => {
       const price = row.getValue('vehiclePrice') as number
       return h('div', { class: 'text-right font-medium' }, formatPrice(price))
@@ -73,7 +131,21 @@ const columns: TableColumn<FactureVente>[] = [
   },
   {
     accessorKey: 'dateCreation',
-    header: 'Date de création',
+    header: ({ column }) => {
+      const isSorted = column.getIsSorted()
+      return h(UButton, {
+        color: 'neutral',
+        variant: 'ghost',
+        label: 'Date de création',
+        icon: isSorted
+          ? isSorted === 'asc'
+            ? 'i-lucide-arrow-up-narrow-wide'
+            : 'i-lucide-arrow-down-wide-narrow'
+          : 'i-lucide-arrow-up-down',
+        class: '-mx-2.5',
+        onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
+      })
+    },
     cell: ({ row }) => formatDate(row.getValue('dateCreation'))
   },
   {
@@ -114,6 +186,10 @@ const columnFilters = ref([
     value: ''
   }
 ])
+
+const sorting = ref([{ id: 'dateCreation', desc: true }])
+const page = ref(1)
+const itemsPerPage = ref(10)
 </script>
 
 <template>
@@ -142,9 +218,13 @@ const columnFilters = ref([
     <UTable
       ref="table"
       v-model:column-filters="columnFilters"
+      v-model:sort="sorting"
+      v-model:page="page"
+      :rows-per-page="itemsPerPage"
       :data="factures"
       :columns="columns"
       :loading="isLoading"
+      class="flex-1"
     >
       <template #empty>
         <div class="flex flex-col gap-1 items-center justify-center h-full">

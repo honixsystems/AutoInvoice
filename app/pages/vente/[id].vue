@@ -12,8 +12,9 @@ const error = ref<string | null>(null)
 onMounted(async () => {
   try {
     const id = route.params.id as string
-    const factureData = getFacture(id)
-    
+    const factureData = await getFacture(id)
+
+    console.log(factureData)
     if (!factureData || factureData.type !== 'vente') {
       error.value = 'Facture non trouvée'
       return

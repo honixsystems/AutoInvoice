@@ -54,16 +54,58 @@ const handleDeleteConfirm = () => {
 const columns: TableColumn<FactureTransport>[] = [
   {
     accessorKey: 'clientName',
-    header: 'Client'
+    header: ({ column }) => {
+      const isSorted = column.getIsSorted()
+      return h(UButton, {
+        color: 'neutral',
+        variant: 'ghost',
+        label: 'Client',
+        icon: isSorted
+          ? isSorted === 'asc'
+            ? 'i-lucide-arrow-up-narrow-wide'
+            : 'i-lucide-arrow-down-wide-narrow'
+          : 'i-lucide-arrow-up-down',
+        class: '-mx-2.5',
+        onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
+      })
+    }
   },
   {
     accessorKey: 'transportDate',
-    header: 'Date de transport',
+    header: ({ column }) => {
+      const isSorted = column.getIsSorted()
+      return h(UButton, {
+        color: 'neutral',
+        variant: 'ghost',
+        label: 'Date de transport',
+        icon: isSorted
+          ? isSorted === 'asc'
+            ? 'i-lucide-arrow-up-narrow-wide'
+            : 'i-lucide-arrow-down-wide-narrow'
+          : 'i-lucide-arrow-up-down',
+        class: '-mx-2.5',
+        onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
+      })
+    },
     cell: ({ row }) => formatDate(row.getValue('transportDate'))
   },
   {
     accessorKey: 'route',
-    header: 'Trajet',
+    header: ({ column }) => {
+      const isSorted = column.getIsSorted()
+      return h(UButton, {
+        color: 'neutral',
+        variant: 'ghost',
+        label: 'Trajet',
+        icon: isSorted
+          ? isSorted === 'asc'
+            ? 'i-lucide-arrow-up-narrow-wide'
+            : 'i-lucide-arrow-down-wide-narrow'
+          : 'i-lucide-arrow-up-down',
+        class: '-mx-2.5',
+        onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
+      })
+    },
     cell: ({ row }) => {
       const departure = row.original.departureLocation
       const arrival = row.original.arrivalLocation
@@ -73,12 +115,42 @@ const columns: TableColumn<FactureTransport>[] = [
   },
   {
     accessorKey: 'distance',
-    header: 'Distance (km)',
+    header: ({ column }) => {
+      const isSorted = column.getIsSorted()
+      return h(UButton, {
+        color: 'neutral',
+        variant: 'ghost',
+        label: 'Distance (km)',
+        icon: isSorted
+          ? isSorted === 'asc'
+            ? 'i-lucide-arrow-up-narrow-wide'
+            : 'i-lucide-arrow-down-wide-narrow'
+          : 'i-lucide-arrow-up-down',
+        class: '-mx-2.5',
+        onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
+      })
+    },
     cell: ({ row }) => row.original.distance || 0
   },
   {
     accessorKey: 'total',
-    header: () => h('div', { class: 'text-right' }, 'Total'),
+    header: ({ column }) => {
+      const isSorted = column.getIsSorted()
+      return h('div', { class: 'flex justify-end' }, [
+        h(UButton, {
+          color: 'neutral',
+          variant: 'ghost',
+          label: 'Total',
+          icon: isSorted
+            ? isSorted === 'asc'
+              ? 'i-lucide-arrow-up-narrow-wide'
+              : 'i-lucide-arrow-down-wide-narrow'
+            : 'i-lucide-arrow-up-down',
+          class: '-mx-2.5',
+          onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
+        })
+      ])
+    },
     cell: ({ row }) => {
       const distance = Number(row.original.distance) || 0
       const pricePerKm = Number(row.original.pricePerKm) || 0
@@ -112,6 +184,10 @@ const columns: TableColumn<FactureTransport>[] = [
 
 const table = useTemplateRef('table')
 const columnFilters = ref([])
+
+const sorting = ref([{ id: 'transportDate', desc: true }])
+const page = ref(1)
+const itemsPerPage = ref(10)
 </script>
 
 <template>
@@ -134,9 +210,13 @@ const columnFilters = ref([])
     <UTable
       ref="table"
       v-model:column-filters="columnFilters"
+      v-model:sort="sorting"
+      v-model:page="page"
+      :rows-per-page="itemsPerPage"
       :data="factures"
       :columns="columns"
       :loading="isLoading"
+      class="flex-1"
     >
       <template #empty>
         <div class="flex flex-col gap-1 items-center justify-center h-full">

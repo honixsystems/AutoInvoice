@@ -1,8 +1,12 @@
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 use tauri::menu::{Menu, MenuItem};
+mod migrations;
 
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_sql::Builder::new()
+            .add_migrations("sqlite:autoinvoice.db", migrations::get_migrations())
+            .build())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {

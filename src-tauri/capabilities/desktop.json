@@ -59,6 +59,8 @@
     "core:webview:allow-create-webview-window",
     "dialog:allow-open",
     "dialog:allow-save",
-    "process:default"
+    "process:default",
+    "sql:default",
+    "sql:allow-execute"
   ]
 }

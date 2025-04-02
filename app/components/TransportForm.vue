@@ -4,23 +4,44 @@
       <template #client>
         <div class="space-y-4 w-full">
           <h2 class="text-xl font-semibold mb-4">Informations du client</h2>
-          <UForm ref="clientFormRef" :schema="clientSchema" :state="state" class="space-y-4 w-full">
-            <UFormField label="Nom du client" name="clientName">
-              <UInput v-model="state.clientName" placeholder="Nom complet" class="w-full" />
-            </UFormField>
-            <UFormField label="Téléphone" name="clientPhone">
-              <UInput v-model="state.clientPhone" placeholder="Numéro de téléphone" class="w-full" />
-            </UFormField>
-            <UFormField label="Email" name="clientEmail">
-              <UInput v-model="state.clientEmail" type="email" placeholder="Adresse email" class="w-full" />
-            </UFormField>
-            <UFormField label="Adresse" name="clientAddress">
-              <UTextarea v-model="state.clientAddress" placeholder="Adresse complète" class="w-full" />
-            </UFormField>
-            <UFormField label="Numéro de TVA" name="clientVAT">
-              <UInput v-model="state.clientVAT" placeholder="Numéro de TVA" class="w-full" />
-            </UFormField>
-          </UForm>
+          <UCard class="mb-4">
+            <template #header>
+              <h3 class="text-base font-semibold leading-6 text-gray-900 dark:text-white">
+                Informations client
+              </h3>
+            </template>
+
+            <ClientSelect
+              v-model="selectedClientId"
+              :client-form-data="{
+                name: state.clientName,
+                phone: state.clientPhone,
+                email: state.clientEmail,
+                address: state.clientAddress,
+                vat: state.clientVAT
+              }"
+              @select-client="onSelectClient"
+              class="mb-4"
+            />
+
+            <UForm ref="clientFormRef" :schema="clientSchema" :state="state" class="space-y-4 w-full">
+              <UFormField label="Nom du client" name="clientName">
+                <UInput v-model="state.clientName" placeholder="Nom complet" class="w-full" />
+              </UFormField>
+              <UFormField label="Téléphone" name="clientPhone">
+                <UInput v-model="state.clientPhone" placeholder="Numéro de téléphone" class="w-full" />
+              </UFormField>
+              <UFormField label="Email" name="clientEmail">
+                <UInput v-model="state.clientEmail" type="email" placeholder="Adresse email" class="w-full" />
+              </UFormField>
+              <UFormField label="Adresse" name="clientAddress">
+                <UTextarea v-model="state.clientAddress" placeholder="Adresse complète" class="w-full" />
+              </UFormField>
+              <UFormField label="Numéro de TVA" name="clientVAT">
+                <UInput v-model="state.clientVAT" placeholder="Numéro de TVA" class="w-full" />
+              </UFormField>
+            </UForm>
+          </UCard>
         </div>
       </template>
 
@@ -120,6 +141,7 @@ import type { StepperItem } from '@nuxt/ui'
 import { save } from '@tauri-apps/plugin-dialog'
 import { writeFile } from '@tauri-apps/plugin-fs'
 import { useFactures, type FactureTransport } from '~/composables/useFactures'
+import type { Client } from '~/composables/useClients'
 
 const clientSchema = z.object({
   clientName: z.string().min(1, 'Le nom du client est requis'),
@@ -202,6 +224,27 @@ const props = defineProps<{
 
 const { addFacture, updateFacture, getFacture } = useFactures()
 
+const selectedClientId = ref<string>()
+
+const onSelectClient = (client: Client | undefined) => {
+  if (client) {
+    state.clientName = client.name
+    state.clientPhone = client.phone
+    state.clientEmail = client.email
+    state.clientAddress = client.address
+    state.clientVAT = client.vat
+  }
+}
+
+onMounted(async () => {
+  if (props.factureId) {
+    const facture = await getFacture(props.factureId)
+    if (facture && facture.type === 'transport') {
+      Object.assign(state, facture)
+    }
+  }
+})
+
 async function onSubmit(event: FormSubmitEvent<PriceSchema>) {
   toast.add({ 
     title: 'Succès', 
@@ -215,6 +258,7 @@ const generateInvoice = async () => {
   try {
     const factureData: Omit<FactureTransport, 'id' | 'dateCreation' | 'dateModification'> = {
       type: 'transport',
+      clientId: selectedClientId.value,
       clientName: state.clientName!,
       clientPhone: state.clientPhone,
       clientEmail: state.clientEmail,
@@ -311,6 +355,32 @@ const nextStep = async () => {
   switch (currentStep.value) {
     case 0:
       isValid = await clientFormRef.value?.validate()
+      if (isValid && !selectedClientId.value && state.clientName) {
+        try {
+          const { addClient } = useClients()
+          const newClientId = await addClient({
+            name: state.clientName,
+            phone: state.clientPhone,
+            email: state.clientEmail,
+            address: state.clientAddress,
+            vat: state.clientVAT
+          })
+          selectedClientId.value = newClientId
+          toast.add({
+            title: 'Succès',
+            description: 'Le client a été créé automatiquement',
+            color: 'success'
+          })
+        } catch (error) {
+          console.error('Erreur lors de la création du client:', error)
+          toast.add({
+            title: 'Erreur',
+            description: 'Une erreur est survenue lors de la création du client',
+            color: 'error'
+          })
+          return
+        }
+      }
       break
     case 1:
       isValid = await transportFormRef.value?.validate()
