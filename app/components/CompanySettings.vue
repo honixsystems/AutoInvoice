@@ -6,11 +6,11 @@ import { BaseDirectory, writeFile, readFile } from '@tauri-apps/plugin-fs'
 
 const schema = z.object({
   companyName: z.string().min(1, 'Le nom de l\'entreprise est requis'),
-  accountNumber: z.string().min(1, 'Le numéro de compte est requis'),
   phoneNumber: z.string().min(1, 'Le numéro de téléphone est requis'),
   address: z.string().min(1, 'L\'adresse est requise'),
   footerNote: z.string().optional(),
   primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Couleur hexadécimale invalide'),
+  displayVAT: z.boolean().optional(),
   vatRate: z.number().min(0).max(100).step(0.1, 'Le taux de TVA doit être entre 0 et 100'),
   vatNumber: z.string().min(1, 'Le numéro de TVA est requis'),
   logoUrl: z.string().optional()
@@ -20,14 +20,14 @@ type Schema = z.output<typeof schema>
 
 const state = reactive<Partial<Schema>>({
   companyName: undefined,
-  accountNumber: undefined,
   phoneNumber: undefined,
   address: undefined,
   footerNote: undefined,
   primaryColor: '#000000',
   vatRate: 20,
   vatNumber: undefined,
-  logoUrl: undefined
+  logoUrl: undefined,
+  displayVAT: false
 })
 
 watch(() => state.primaryColor, (newColor) => {
@@ -117,21 +117,22 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         <UInput v-model="state.companyName" placeholder="Nom de votre entreprise" class="w-full" />
       </UFormField>
 
-      <UFormField label="Numéro de compte" name="accountNumber">
-        <UInput v-model="state.accountNumber" placeholder="IBAN" class="w-full" />
-      </UFormField>
-
       <UFormField label="Numéro de téléphone" name="phoneNumber">
         <UInput v-model="state.phoneNumber" type="tel" placeholder="+33 1 23 45 67 89" class="w-full" />
-      </UFormField>
-
-      <UFormField label="Taux de TVA (%)" name="vatRate">
-        <UInput v-model="state.vatRate" type="number" min="0" max="100" step="0.1" class="w-full" />
       </UFormField>
 
       <UFormField label="Numéro de TVA" name="vatNumber">
         <UInput v-model="state.vatNumber" placeholder="FR12345678900" class="w-full" />
       </UFormField>
+
+      <div class="flex items-center gap-4 w-full">
+        <UFormField label="Taux de TVA (%)" name="vatRate" class="w-full">
+          <UInput v-model="state.vatRate" type="number" min="0" max="100" step="0.1" class="w-full" />
+        </UFormField>
+        <UFormField label="Afficher la TVA" name="displayVAT" class="w-full">
+          <USwitch v-model="state.displayVAT" />
+        </UFormField>
+      </div>
 
       <UPopover>
         <UFormField label="Couleur primaire de la facture" name="primaryColor" class="md:col-span-1">

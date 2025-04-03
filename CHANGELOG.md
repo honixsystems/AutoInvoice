@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.3] - 2025-04-03
+
+- Ajout du numéro de TVA dans les paramètres de l'entreprise
+- Amélioration de l'affichage des factures
+
+
 ## [1.1.2] - 2025-04-03
 
 - Ajout d'une page de gestion des clients

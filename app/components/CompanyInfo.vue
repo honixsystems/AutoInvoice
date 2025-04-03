@@ -41,7 +41,7 @@ onMounted(async () => {
 .company-info h2 {
   color: v-bind('settings?.primaryColor || "#EC6714"');
   font-size: 24px;
-  margin: 0 0 10px 0;
+  font-weight: 600;
 }
 
 .company-info p {

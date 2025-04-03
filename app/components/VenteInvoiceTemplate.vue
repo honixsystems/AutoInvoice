@@ -7,23 +7,23 @@
     <template #client-details>
       <div class="client-detail-row">
         <span class="label">Nom:</span>
-        <span class="value">{{ data.clientName }}</span>
+        <span class="value">{{ data?.client?.name }}</span>
       </div>
-      <div class="client-detail-row" v-if="data.clientPhone">
+      <div class="client-detail-row" v-if="data?.client?.phone">
         <span class="label">Téléphone:</span>
-        <span class="value">{{ data.clientPhone }}</span>
+        <span class="value">{{ data?.client?.phone }}</span>
       </div>
-      <div class="client-detail-row" v-if="data.clientEmail">
+      <div class="client-detail-row" v-if="data?.client?.email">
         <span class="label">Email:</span>
-        <span class="value">{{ data.clientEmail }}</span>
+        <span class="value">{{ data?.client?.email }}</span>
       </div>
-      <div class="client-detail-row" v-if="data.clientAddress">
+      <div class="client-detail-row" v-if="data?.client?.address">
         <span class="label">Adresse:</span>
         <span class="value" v-html="formattedAddress"></span>
       </div>
-      <div class="client-detail-row" v-if="data.clientVAT">
+      <div class="client-detail-row" v-if="data?.client?.vat">
         <span class="label">TVA:</span>
-        <span class="value">{{ data.clientVAT }}</span>
+        <span class="value">{{ data?.client?.vat }}</span>
       </div>
     </template>
 
@@ -33,23 +33,23 @@
         <div class="vehicle-details">
           <div class="vehicle-detail-row">
             <span class="label">Marque/Modèle:</span>
-            <span class="value"><strong>{{ data.vehicleBrand }} {{ data.vehicleModel }}</strong></span>
+            <span class="value"><strong>{{ data?.vehicle_brand }} {{ data?.vehicle_model }}</strong></span>
           </div>
           <div class="vehicle-detail-row">
             <span class="label">Numéro de châssis:</span>
-            <span class="value"><strong>{{ data.vehicleChassis }}</strong></span>
+            <span class="value"><strong>{{ data?.vehicle_chassis }}</strong></span>
           </div>
           <div class="vehicle-detail-row">
             <span class="label">Kilométrage:</span>
-            <span class="value"><strong>{{ data.vehicleMileage }} km</strong></span>
+            <span class="value"><strong>{{ data?.vehicle_mileage }} km</strong></span>
           </div>
           <div class="vehicle-detail-row">
             <span class="label">Couleur:</span>
-            <span class="value"><strong>{{ data.vehicleColor }}</strong></span>
+            <span class="value"><strong>{{ data?.vehicle_color }}</strong></span>
           </div>
           <div class="vehicle-detail-row">
             <span class="label">Type de véhicule:</span>
-            <span class="value"><strong>{{ data.vehicleType }}</strong></span>
+            <span class="value"><strong>{{ data?.vehicle_type }}</strong></span>
           </div>
           <div class="vehicle-detail-row">
             <span class="label">Date de première immatriculation:</span>
@@ -63,18 +63,18 @@
         <table>
           <tr>
             <td>Véhicule</td>
-            <td>{{ data.vehicleBrand }} {{ data.vehicleModel }}</td>
-            <td>{{ (data.vehiclePrice || 0).toFixed(2) }} €</td>
+            <td>{{ data?.vehicle_brand }} {{ data?.vehicle_model }}</td>
+            <td>{{ (data?.vehicle_price || 0).toFixed(2) }} €</td>
           </tr>
         </table>
         <div class="total">
-          <p v-if="(data.deposit || 0) > 0" class="deposit-info">Acompte reçu : {{ (data.deposit || 0).toFixed(2) }} €</p>
+          <p v-if="(data?.deposit || 0) > 0" class="deposit-info">Acompte reçu : {{ (data?.deposit || 0).toFixed(2) }} €</p>
           <div class="price-details">
-            <div class="price-row">
+            <div class="price-row" v-if="settings?.displayVAT">
               <span class="label">Montant HT:</span>
               <span class="value">{{ priceDetails.priceHT }}</span>
             </div>
-            <div class="price-row">
+            <div class="price-row" v-if="settings?.displayVAT">
               <span class="label">TVA ({{ settings?.vatRate || 21 }}%):</span>
               <span class="value">{{ priceDetails.tva }}</span>
             </div>
@@ -84,7 +84,7 @@
             </div>
           </div>
         </div>
-        <div v-if="data.additionalNotes && data.additionalNotes.trim()" class="additional-notes">
+        <div v-if="data?.additional_notes && data?.additional_notes.trim()" class="additional-notes">
           <h3>Mentions supplémentaires</h3>
           <p v-html="formattedNotes"></p>
         </div>
@@ -96,24 +96,16 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
 import { Store } from '@tauri-apps/plugin-store'
+import { useFactures } from '~/composables/useFactures'
+import type { FactureVente } from '~/composables/useFactures'
 
-interface VenteData {
-  clientName?: string
-  clientPhone?: string
-  clientEmail?: string
-  clientAddress?: string
-  clientVAT?: string
-  vehicleBrand?: string
-  vehicleModel?: string
-  vehicleChassis?: string
-  vehicleMileage?: number
-  vehicleColor?: string
-  vehicleType?: string
-  vehicleFirstRegistration?: string
-  vehiclePrice?: number
-  deposit?: number
-  additionalNotes?: string
-}
+const props = defineProps<{
+  factureId: string
+}>()
+
+const { getFacture } = useFactures()
+const data = ref<FactureVente | null>(null)
+const settings = ref<CompanySettings | null>(null)
 
 interface CompanySettings {
   companyName: string
@@ -123,42 +115,44 @@ interface CompanySettings {
   footerNote?: string
   primaryColor: string
   vatRate: number
+  displayVAT: boolean
 }
-
-const props = defineProps<{
-  data: VenteData
-}>()
-
-const settings = ref<CompanySettings | null>(null)
 
 onMounted(async () => {
   try {
+    // Charger les paramètres de l'entreprise
     const store = await Store.load('company-settings.json')
     const savedSettings = await store.get('settings') as CompanySettings | null
     if (savedSettings) {
       settings.value = savedSettings
     }
+
+    // Charger les données de la facture
+    const facture = await getFacture(props.factureId)
+    if (facture && facture.type === 'vente') {
+      data.value = facture
+    }
   } catch (error) {
-    console.error('Erreur lors du chargement des paramètres:', error)
+    console.error('Erreur lors du chargement des données:', error)
   }
 })
 
 const formattedNotes = computed(() => {
-  return props.data.additionalNotes?.replace(/\n/g, '<br>') || ''
+  return data.value?.additional_notes?.replace(/\n/g, '<br>') || ''
 })
 
 const formattedAddress = computed(() => {
-  return props.data.clientAddress?.replace(/\n/g, '<br>') || ''
+  return data.value?.client?.address?.replace(/\n/g, '<br>') || ''
 })
 
 const formattedDate = computed(() => {
-  if (!props.data.vehicleFirstRegistration) return ''
-  return new Date(props.data.vehicleFirstRegistration).toLocaleDateString('fr-FR')
+  if (!data.value?.vehicle_first_registration) return ''
+  return new Date(data.value.vehicle_first_registration).toLocaleDateString('fr-FR')
 })
 
 const priceDetails = computed(() => {
-  const price = props.data.vehiclePrice || 0
-  const deposit = props.data.deposit || 0
+  const price = data.value?.vehicle_price || 0
+  const deposit = data.value?.deposit || 0
   const vatRate = settings.value?.vatRate || 21
   const priceHT = price / (1 + vatRate / 100)
   const tva = price - priceHT
@@ -205,7 +199,7 @@ const priceDetails = computed(() => {
 .client-detail-row {
   display: grid;
   grid-template-columns: 250px 1fr;
-  align-items: center;
+  align-items: start;
   gap: 16px;
 }
 
@@ -227,7 +221,6 @@ table {
   border-collapse: collapse;
   margin: 20px 0;
   background: white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 td {
@@ -320,5 +313,19 @@ td:last-child {
   color: #666;
   line-height: 1.3;
   white-space: pre-wrap;
+}
+
+h1 {
+  color: v-bind('settings?.primaryColor || "#EC6714"');
+  font-size: 28px;
+  margin: 0;
+  font-weight: 600;
+}
+
+h3 {
+  color: v-bind('settings?.primaryColor || "#EC6714"');
+  font-size: 18px;
+  margin: 0 0 15px 0;
+  font-weight: 600;
 }
 </style> 

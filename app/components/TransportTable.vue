@@ -22,6 +22,8 @@ const emit = defineEmits<{
 
 const showDeleteModal = ref(false)
 const factureToDelete = ref<FactureTransport | null>(null)
+const showPreviewModal = ref(false)
+const selectedFactureId = ref<string>()
 
 const formatDate = (date: string) => {
   return new Date(date).toLocaleDateString('fr-FR', {
@@ -49,6 +51,11 @@ const handleDeleteConfirm = () => {
     showDeleteModal.value = false
     factureToDelete.value = null
   }
+}
+
+const handlePreview = (facture: FactureTransport) => {
+  selectedFactureId.value = facture.id
+  showPreviewModal.value = true
 }
 
 const columns: TableColumn<FactureTransport>[] = [
@@ -166,6 +173,12 @@ const columns: TableColumn<FactureTransport>[] = [
       const facture = row.original
       return h('div', { class: 'flex gap-2' }, [
         h(UButton, {
+          color: 'primary',
+          variant: 'ghost',
+          icon: 'i-heroicons-eye',
+          onClick: () => handlePreview(facture)
+        }, () => 'Prévisualiser'),
+        h(UButton, {
           color: 'neutral',
           variant: 'ghost',
           icon: 'i-heroicons-pencil-square',
@@ -252,5 +265,10 @@ const itemsPerPage = ref(10)
         </UCard>
       </template>
     </UModal>
+    <FacturePreviewModal
+      v-if="selectedFactureId"
+      :facture-id="selectedFactureId"
+      v-model="showPreviewModal"
+    />
   </div>
 </template>

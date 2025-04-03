@@ -108,20 +108,11 @@
     </div>
 
     <!-- Modal de prévisualisation -->
-    <UModal fullscreen v-model:open="showPreview" title="Prévisualisation de la facture" description="Prévisualisation de la facture" icon="i-heroicons-eye">
-      <template #content>
-        <div class="p-4">
-          <h3 class="text-lg font-semibold mb-4">Prévisualisation de la facture</h3>
-        <div class="border rounded-lg p-4 overflow-y-auto max-h-[80vh]">
-          <VenteInvoiceTemplate :data="state" />
-        </div>
-        <div class="flex justify-end mt-4 space-x-2">
-          <UButton color="neutral" @click="showPreview = false">Annuler</UButton>
-          <UButton color="primary" @click="downloadInvoice">Enregistrer en PDF</UButton>
-          </div>
-        </div>
-      </template>
-    </UModal>
+    <FacturePreviewModal
+      v-if="currentFactureId"
+      v-model="showPreview"
+      :facture-id="currentFactureId"
+    />
   </div>
 </template>
 
@@ -201,6 +192,7 @@ const priceFormRef = ref()
 const selectedClientId = ref<string>()
 const showClientForm = ref(true)
 const isEditingClient = ref(false)
+const currentFactureId = ref<string>()
 
 const steps: StepperItem[] = [
   {
@@ -268,14 +260,14 @@ const generateInvoice = async () => {
     }
 
     if (props.factureId) {
-      await updateFacture(props.factureId, factureData)
+      currentFactureId.value = await updateFacture(props.factureId, factureData)
       toast.add({
         title: 'Succès',
         description: 'La facture a été mise à jour avec succès.',
         color: 'success'
       })
     } else {
-      await addFacture(factureData)
+      currentFactureId.value = await addFacture(factureData)
       toast.add({
         title: 'Succès',
         description: 'La facture a été créée avec succès.',
@@ -291,55 +283,6 @@ const generateInvoice = async () => {
       description: 'Une erreur est survenue lors de la génération de la facture.',
       color: 'error'
     })
-  }
-}
-
-const downloadInvoice = async () => {
-  try {
-    // Vérifier que toutes les données requises sont présentes
-    if (!state.client_name || !state.vehicle_brand || !state.vehicle_model) {
-      throw new Error('Les données du client et du véhicule sont requises')
-    }
-
-    const element = document.querySelector('.invoice-template') as HTMLElement
-    if (!element) return
-
-    const { default: html2canvas } = await import('html2canvas-pro')
-    const canvas = await html2canvas(element, {
-      scale: 2,
-      useCORS: true,
-      logging: false,
-      backgroundColor: '#ffffff'
-    })
-
-    const { jsPDF } = await import('jspdf')
-    const pdf = new jsPDF()
-    
-    const imgData = canvas.toDataURL('image/jpeg', 1.0)
-    const pdfWidth = pdf.internal.pageSize.getWidth()
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width
-    
-    pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight)
-    
-    // Convertir le PDF en Uint8Array
-    const pdfBytes = pdf.output('arraybuffer')
-    const pdfArray = new Uint8Array(pdfBytes)
-    
-    // Utiliser le dialogue natif de Tauri pour sauvegarder le fichier
-    const filePath = await save({
-      filters: [{
-        name: 'PDF',
-        extensions: ['pdf']
-      }],
-      defaultPath: `facture_vente_${state.client_name}_${state.vehicle_brand}_${state.vehicle_model}.pdf`
-    })
-    
-    if (filePath) {
-      await writeFile(filePath, pdfArray)
-      showPreview.value = false
-    }
-  } catch (error) {
-    console.error('Erreur lors de la génération du PDF:', error)
   }
 }
 

@@ -2,6 +2,7 @@
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import { useFactures, type FactureVente } from '~/composables/useFactures'
+import FacturePreviewModal from './FacturePreviewModal.vue'
 
 const UBadge = resolveComponent('UBadge')
 const UButton = resolveComponent('UButton')
@@ -21,6 +22,8 @@ const emit = defineEmits<{
 
 const showDeleteModal = ref(false)
 const factureToDelete = ref<FactureVente | null>(null)
+const showPreviewModal = ref(false)
+const selectedFactureId = ref<string>()
 
 const formatDate = (date: string) => {
   return new Date(date).toLocaleDateString('fr-FR', {
@@ -48,6 +51,12 @@ const handleDeleteConfirm = () => {
     showDeleteModal.value = false
     factureToDelete.value = null
   }
+}
+
+const handlePreview = (facture: FactureVente) => {
+  console.log('Opening preview for facture:', facture.id)
+  selectedFactureId.value = facture.id
+  showPreviewModal.value = true
 }
 
 const columns: TableColumn<FactureVente>[] = [
@@ -164,6 +173,12 @@ const columns: TableColumn<FactureVente>[] = [
     cell: ({ row }) => {
       const facture = row.original
       return h('div', { class: 'flex gap-2' }, [
+        h(UButton, {
+          color: 'primary',
+          variant: 'ghost',
+          icon: 'i-heroicons-eye',
+          onClick: () => handlePreview(facture)
+        }, () => 'Prévisualiser'),
         h(UButton, {
           color: 'neutral',
           variant: 'ghost',
@@ -283,5 +298,10 @@ const itemsPerPage = ref(10)
         </UCard>
       </template>
     </UModal>
+    <FacturePreviewModal
+      v-if="selectedFactureId"
+      :facture-id="selectedFactureId"
+      v-model="showPreviewModal"
+    />
   </div>
 </template> 

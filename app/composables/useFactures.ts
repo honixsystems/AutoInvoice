@@ -10,6 +10,7 @@ export interface FactureBase {
   client_id?: string
   date_creation: string
   date_modification: string
+  additional_notes?: string
 }
 
 export interface FactureVente extends FactureBase {
@@ -151,8 +152,7 @@ export function useFactures() {
   }
 
   // Ajouter une nouvelle facture
-  const addFacture = async (facture: Omit<Facture, 'id' | 'date_creation' | 'date_modification'>) => {
-    console.log(facture)
+  const addFacture = async (facture: Omit<Facture, 'id' | 'date_creation' | 'date_modification'>): Promise<string> => {
     try {
       const id = crypto.randomUUID()
       const now = new Date().toISOString()
@@ -212,6 +212,8 @@ export function useFactures() {
           ]
         )
       }
+
+      return id
     } catch (e) {
       console.error('Erreur lors de l\'ajout de la facture:', e)
       throw e
@@ -219,7 +221,7 @@ export function useFactures() {
   }
 
   // Mettre à jour une facture existante
-  const updateFacture = async (id: string, facture: Omit<Facture, 'id' | 'date_creation' | 'date_modification'>) => {
+  const updateFacture = async (id: string, facture: Omit<Facture, 'id' | 'date_creation' | 'date_modification'>): Promise<string> => {
     try {
 
       const now = new Date().toISOString()
@@ -279,6 +281,7 @@ export function useFactures() {
         )
       }
 
+      return id
     } catch (e) {
       console.error('Erreur lors de la mise à jour de la facture:', e)
       throw e
@@ -286,7 +289,7 @@ export function useFactures() {
   }
 
   // Supprimer une facture
-  const deleteFacture = async (id: string) => {
+  const deleteFacture = async (id: string): Promise<void> => {
     try {
 
       // La suppression en cascade s'occupera des tables liées
@@ -310,15 +313,27 @@ export function useFactures() {
         if (vente.length === 0 || !vente[0]) return undefined
 
         const venteData = vente[0]
-        const baseData = base[0]
+        const baseDataDB = base[0]
+
+        let baseData: FactureBase = {
+          id: baseDataDB.id,
+          type: baseDataDB.type,
+          client_id: baseDataDB.client_id,
+          date_creation: baseDataDB.date_creation,
+          date_modification: baseDataDB.date_modification,
+          additional_notes: baseDataDB.additional_notes
+        }
+
+        // Charger le client associé à la facture
+        if (baseDataDB.client_id) {
+          const client = await clientsComposable.getClient(baseDataDB.client_id)
+          if (client) {
+            baseData.client = client
+          }
+        }
 
         return {
           ...baseData,
-          ...venteData,
-          client_id: baseData.client_id,
-          date_creation: baseData.date_creation,
-          date_modification: baseData.date_modification,
-          additional_notes: baseData.additional_notes,
           vehicle_brand: venteData.vehicle_brand,
           vehicle_model: venteData.vehicle_model,
           vehicle_chassis: venteData.vehicle_chassis,
@@ -334,15 +349,27 @@ export function useFactures() {
         if (transport.length === 0 || !transport[0]) return undefined
 
         const transportData = transport[0]
-        const baseData = base[0]
+        const baseDataDB = base[0]
+
+        let baseData: FactureBase = {
+          id: baseDataDB.id,
+          type: baseDataDB.type,
+          client_id: baseDataDB.client_id,
+          date_creation: baseDataDB.date_creation,
+          date_modification: baseDataDB.date_modification,
+          additional_notes: baseDataDB.additional_notes
+        }
+
+        // Charger le client associé à la facture
+        if (baseDataDB.client_id) {
+          const client = await clientsComposable.getClient(baseDataDB.client_id)
+          if (client) {
+            baseData.client = client
+          }
+        }
 
         return {
           ...baseData,
-          ...transportData,
-          client_id: baseData.client_id,
-          date_creation: baseData.date_creation,
-          date_modification: baseData.date_modification,
-          additional_notes: baseData.additional_notes,
           transport_date: transportData.transport_date,
           departure_location: transportData.departure_location,
           arrival_location: transportData.arrival_location,
