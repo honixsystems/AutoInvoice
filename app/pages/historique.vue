@@ -3,10 +3,12 @@ import { useFactures } from '~/composables/useFactures'
 import VentesTable from '~/components/VentesTable.vue'
 import TransportTable from '~/components/TransportTable.vue'
 
-const { factures, loadFactures, deleteFacture } = useFactures()
+const { loadFactures, deleteFacture } = useFactures()
 const isLoading = ref(false)
 const error = ref<string | null>(null)
 const toast = useToast()
+
+const factures = ref<Facture[]>([])
 
 const facturesVente = computed(() => factures.value.filter(f => f.type === 'vente'))
 const facturesTransport = computed(() => factures.value.filter(f => f.type === 'transport'))
@@ -14,7 +16,7 @@ const facturesTransport = computed(() => factures.value.filter(f => f.type === '
 onMounted(async () => {
   try {
     isLoading.value = true
-    await loadFactures()
+    factures.value = await loadFactures()
   } catch (e) {
     error.value = 'Erreur lors du chargement des factures'
     console.error('Erreur lors du chargement des factures:', e)
@@ -54,7 +56,7 @@ const editFacture = (facture: any) => {
 const handleDeleteFacture = async (facture: any) => {
   try {
     await deleteFacture(facture.id)
-    loadFactures()
+    factures.value = await loadFactures()
     toast.add({
       title: 'Succès',
       description: 'La facture a été supprimée avec succès.',

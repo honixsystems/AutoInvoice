@@ -42,7 +42,7 @@ const navigateTo = (type: 'transport' | 'vente') => {
         <div class="flex justify-center mb-4">
           <CompanyLogo />
         </div>
-        <h1 class="text-4xl font-bold text-gray-900 mb-4">Gestion des Factures</h1>
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">Nouvelle facture</h1>
         <p class="text-lg text-gray-600">Sélectionnez le type de facture à générer</p>
       </div>
       
@@ -64,18 +64,29 @@ const navigateTo = (type: 'transport' | 'vente') => {
           </div>
         </UCard>
       </div>
-    </div>
 
-    <div class="fixed bottom-4 left-1/2 transform -translate-x-1/2">
-      <UButton
-        color="neutral"
-        variant="soft"
-        to="/historique"
-        size="sm"
-      >
-        <UIcon name="i-heroicons-clock" class="mr-2" />
-        Historique des factures
-      </UButton>
+      <div class="text-center mt-12 space-x-4">
+        <UButton
+          color="primary"
+          variant="solid"
+          to="/historique"
+          size="lg"
+          class="font-semibold"
+        >
+          <UIcon name="i-heroicons-clock" class="mr-2" />
+          Voir l'historique des factures
+        </UButton>
+        <UButton
+          color="primary"
+          variant="solid"
+          to="/clients"
+          size="lg"
+          class="font-semibold"
+        >
+          <UIcon name="i-heroicons-users" class="mr-2" />
+          Gérer mes clients
+        </UButton>
+      </div>
     </div>
   </div>
 </template>

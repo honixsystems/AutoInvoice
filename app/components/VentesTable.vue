@@ -52,7 +52,7 @@ const handleDeleteConfirm = () => {
 
 const columns: TableColumn<FactureVente>[] = [
   {
-    accessorKey: 'clientName',
+    accessorKey: 'client',
     header: ({ column }) => {
       const isSorted = column.getIsSorted()
       return h(UButton, {
@@ -67,10 +67,20 @@ const columns: TableColumn<FactureVente>[] = [
         class: '-mx-2.5',
         onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
       })
+    },
+    cell: ({ row }) => row.original.client?.name ?? 'N/A',
+    sortingFn: (rowA, rowB) => {
+      const nameA = rowA.original.client?.name ?? ''
+      const nameB = rowB.original.client?.name ?? ''
+      return nameA.localeCompare(nameB)
+    },
+    filterFn: (row, columnId, filterValue) => {
+      const clientName = row.original.client?.name ?? ''
+      return clientName.toLowerCase().includes(filterValue.toLowerCase())
     }
   },
   {
-    accessorKey: 'vehicleBrand',
+    accessorKey: 'vehicle_brand',
     header: ({ column }) => {
       const isSorted = column.getIsSorted()
       return h(UButton, {
@@ -88,7 +98,7 @@ const columns: TableColumn<FactureVente>[] = [
     }
   },
   {
-    accessorKey: 'vehicleModel',
+    accessorKey: 'vehicle_model',
     header: ({ column }) => {
       const isSorted = column.getIsSorted()
       return h(UButton, {
@@ -106,7 +116,7 @@ const columns: TableColumn<FactureVente>[] = [
     }
   },
   {
-    accessorKey: 'vehiclePrice',
+    accessorKey: 'vehicle_price',
     header: ({ column }) => {
       const isSorted = column.getIsSorted()
       return h('div', { class: 'flex justify-end' }, [
@@ -125,12 +135,12 @@ const columns: TableColumn<FactureVente>[] = [
       ])
     },
     cell: ({ row }) => {
-      const price = row.getValue('vehiclePrice') as number
+      const price = row.getValue('vehicle_price') as number
       return h('div', { class: 'text-right font-medium' }, formatPrice(price))
     }
   },
   {
-    accessorKey: 'dateCreation',
+    accessorKey: 'date_creation',
     header: ({ column }) => {
       const isSorted = column.getIsSorted()
       return h(UButton, {
@@ -146,7 +156,7 @@ const columns: TableColumn<FactureVente>[] = [
         onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
       })
     },
-    cell: ({ row }) => formatDate(row.getValue('dateCreation'))
+    cell: ({ row }) => formatDate(row.getValue('date_creation'))
   },
   {
     accessorKey: 'actions',
@@ -174,20 +184,20 @@ const columns: TableColumn<FactureVente>[] = [
 const table = useTemplateRef('table')
 const columnFilters = ref([
   {
-    id: 'clientName',
+    id: 'client',
     value: ''
   },
   {
-    id: 'vehicleBrand',
+    id: 'vehicle_brand',
     value: ''
   },
   {
-    id: 'vehicleModel',
+    id: 'vehicle_model',
     value: ''
   }
 ])
 
-const sorting = ref([{ id: 'dateCreation', desc: true }])
+const sorting = ref([{ id: 'date_creation', desc: true }])
 const page = ref(1)
 const itemsPerPage = ref(10)
 </script>
@@ -196,22 +206,22 @@ const itemsPerPage = ref(10)
   <div class="flex flex-col flex-1 w-full">
     <div class="flex px-4 py-3.5 border-b border-(--ui-border-accented) gap-4">
       <UInput
-        :model-value="table?.tableApi?.getColumn('clientName')?.getFilterValue() as string"
+        :model-value="table?.tableApi?.getColumn('client')?.getFilterValue() as string"
         class="max-w-sm"
         placeholder="Rechercher par client..."
-        @update:model-value="table?.tableApi?.getColumn('clientName')?.setFilterValue($event)"
+        @update:model-value="table?.tableApi?.getColumn('client')?.setFilterValue($event)"
       />
       <UInput
-        :model-value="table?.tableApi?.getColumn('vehicleBrand')?.getFilterValue() as string"
+        :model-value="table?.tableApi?.getColumn('vehicle_brand')?.getFilterValue() as string"
         class="max-w-sm"
         placeholder="Rechercher par marque..."
-        @update:model-value="table?.tableApi?.getColumn('vehicleBrand')?.setFilterValue($event)"
+        @update:model-value="table?.tableApi?.getColumn('vehicle_brand')?.setFilterValue($event)"
       />
       <UInput
-        :model-value="table?.tableApi?.getColumn('vehicleModel')?.getFilterValue() as string"
+        :model-value="table?.tableApi?.getColumn('vehicle_model')?.getFilterValue() as string"
         class="max-w-sm"
         placeholder="Rechercher par modèle..."
-        @update:model-value="table?.tableApi?.getColumn('vehicleModel')?.setFilterValue($event)"
+        @update:model-value="table?.tableApi?.getColumn('vehicle_model')?.setFilterValue($event)"
       />
     </div>
 

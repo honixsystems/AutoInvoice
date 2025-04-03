@@ -8,8 +8,8 @@ export interface Client {
   email?: string
   address?: string
   vat?: string
-  dateCreation: string
-  dateModification: string
+  date_creation: string
+  date_modification: string
 }
 
 interface ClientDB {
@@ -50,8 +50,8 @@ export function useClients() {
 
       return result.map(client => ({
         ...client,
-        dateCreation: client.date_creation,
-        dateModification: client.date_modification
+        date_creation: client.date_creation,
+        date_modification: client.date_modification
       }))
     } catch (e) {
       console.error('Erreur lors du chargement des clients:', e)
@@ -60,7 +60,7 @@ export function useClients() {
   }
 
   // Ajouter un nouveau client
-  const addClient = async (client: Omit<Client, 'id' | 'dateCreation' | 'dateModification'>): Promise<string> => {
+  const addClient = async (client: Omit<Client, 'id' | 'date_creation' | 'date_modification'>): Promise<string> => {
     try {
       if (!db.value) {
         await initDatabase()
@@ -93,7 +93,7 @@ export function useClients() {
   }
 
   // Mettre à jour un client existant
-  const updateClient = async (id: string, client: Omit<Client, 'id' | 'dateCreation' | 'dateModification'>) => {
+  const updateClient = async (id: string, client: Omit<Client, 'id' | 'date_creation' | 'date_modification'>) => {
     try {
       if (!db.value) {
         await initDatabase()
@@ -149,13 +149,13 @@ export function useClients() {
         [id]
       )
 
-      if (result.length === 0) return undefined
+      if (result.length === 0 || !result[0]) return undefined
 
       const client = result[0]
       return {
         ...client,
-        dateCreation: client!.date_creation,
-        dateModification: client!.date_modification
+        date_creation: client!.date_creation,
+        date_modification: client!.date_modification
       }
     } catch (e) {
       console.error('Erreur lors de la récupération du client:', e)

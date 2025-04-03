@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.2] - 2025-04-03
+
+- Ajout d'une page de gestion des clients
+- Ajout d'une table pour afficher les clients
+- Ajout d'un formulaire pour créer un client
+- Ajout d'un formulaire pour modifier un client
+- Ajout d'un bouton pour supprimer un client
+
 ## [1.1.1] - 2025-04-02
 
 - Ajout du bouton de modification du client

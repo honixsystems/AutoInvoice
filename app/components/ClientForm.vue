@@ -12,6 +12,7 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void
+  (e: 'success'): void
 }>()
 
 const clients = useClients()
@@ -33,7 +34,7 @@ defineExpose({
   validate
 })
 
-let state = reactive<Omit<Client, 'id' | 'dateCreation' | 'dateModification'>>({
+let state = reactive<Omit<Client, 'id' | 'date_creation' | 'date_modification'>>({
   name: '',
   phone: '',
   email: '',
@@ -65,6 +66,7 @@ const addClient = async () => {
 
     const clientId = await clients.addClient(state)
     emit('update:modelValue', clientId)
+    emit('success')
     toast.add({
       title: 'Client ajouté avec succès',
       description: 'Le client a été ajouté avec succès',
@@ -91,6 +93,7 @@ const updateClient = async () => {
     }
 
     await clients.updateClient(props.modelValue, state)
+    emit('success')
   } catch (error) {
     console.error(error)
     toast.add({
@@ -145,7 +148,7 @@ watch(() => props.modelValue, async (newVal) => {
 
 <template>
   <div class="flex flex-col gap-2">
-    <UCard class="mb-4">
+    <UCard>
       <template #header>
         <h3 class="text-base font-semibold leading-6 text-gray-900 dark:text-white">
           {{ modelValue ? 'Modifier le client' : 'Nouveau client' }}

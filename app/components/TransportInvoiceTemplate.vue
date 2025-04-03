@@ -1,62 +1,82 @@
 <template>
-  <div class="invoice-template">
-    <div class="header">
-      <div class="header-left">
-        <CompanyLogo />
-        <h1>FACTURE DE TRANSPORT</h1>
-      </div>
-      <div class="header-right">
-        <CompanyInfo />
-      </div>
-    </div>
+  <BaseInvoiceTemplate>
+    <template #title>
+      <h1>FACTURE DE TRANSPORT</h1>
+    </template>
 
-    <div class="client-info">
-      <h3>Client</h3>
-      <p>{{ data.clientName }}</p>
-      <p v-if="data.clientPhone">Tél: {{ data.clientPhone }}</p>
-      <p v-if="data.clientEmail">Email: {{ data.clientEmail }}</p>
-      <p v-if="data.clientAddress" v-html="formattedAddress"></p>
-      <p v-if="data.clientVAT">TVA: {{ data.clientVAT }}</p>
-    </div>
-
-    <div class="transport-details">
-      <h3>Détails du transport</h3>
-      <p>Date: {{ data.transportDate }}</p>
-      <p>Départ: {{ data.departureLocation }}</p>
-      <p>Arrivée: {{ data.arrivalLocation }}</p>
-    </div>
-
-    <div class="pricing">
-      <h3>Tarifs</h3>
-      <table>
-        <tr>
-          <td>Distance</td>
-          <td>{{ data.distance || 0 }} km</td>
-          <td>{{ data.pricePerKm || 0 }} €/km</td>
-          <td>{{ ((data.distance || 0) * (data.pricePerKm || 0)).toFixed(2) }} €</td>
-        </tr>
-        <tr v-if="(data.pickupPrice || 0) > 0">
-          <td>Prise en charge</td>
-          <td>-</td>
-          <td>-</td>
-          <td>{{ (data.pickupPrice || 0).toFixed(2) }} €</td>
-        </tr>
-      </table>
-      <div class="total">
-        <strong>Total HT: {{ total }} €</strong>
+    <template #client-details>
+      <div class="client-detail-row">
+        <span class="label">Nom:</span>
+        <span class="value">{{ data.clientName }}</span>
       </div>
-      <div v-if="data.additionalNotes && data.additionalNotes.trim()" class="additional-notes">
-        <h3>Mentions supplémentaires</h3>
-        <p v-html="formattedNotes"></p>
+      <div class="client-detail-row" v-if="data.clientPhone">
+        <span class="label">Téléphone:</span>
+        <span class="value">{{ data.clientPhone }}</span>
       </div>
-    </div>
+      <div class="client-detail-row" v-if="data.clientEmail">
+        <span class="label">Email:</span>
+        <span class="value">{{ data.clientEmail }}</span>
+      </div>
+      <div class="client-detail-row" v-if="data.clientAddress">
+        <span class="label">Adresse:</span>
+        <span class="value" v-html="formattedAddress"></span>
+      </div>
+      <div class="client-detail-row" v-if="data.clientVAT">
+        <span class="label">TVA:</span>
+        <span class="value">{{ data.clientVAT }}</span>
+      </div>
+    </template>
 
-    <div class="footer">
-      <p>Conditions de paiement par virement bancaire</p>
-      <p>Numéro de compte: {{ settings?.accountNumber }}</p>
-      <p v-if="settings?.footerNote">{{ settings.footerNote }}</p>
-    </div>
-  </div>
+    <template #main-content>
+      <div class="transport-details">
+        <h3>Détails du transport</h3>
+        <div class="transport-info">
+          <div class="transport-detail-row">
+            <span class="label">Date:</span>
+            <span class="value">{{ data.transportDate }}</span>
+          </div>
+          <div class="transport-detail-row">
+            <span class="label">Départ:</span>
+            <span class="value">{{ data.departureLocation }}</span>
+          </div>
+          <div class="transport-detail-row">
+            <span class="label">Arrivée:</span>
+            <span class="value">{{ data.arrivalLocation }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="pricing">
+        <h3>Tarifs</h3>
+        <table>
+          <tr>
+            <td>Distance</td>
+            <td>{{ data.distance || 0 }} km</td>
+            <td>{{ data.pricePerKm || 0 }} €/km</td>
+            <td>{{ ((data.distance || 0) * (data.pricePerKm || 0)).toFixed(2) }} €</td>
+          </tr>
+          <tr v-if="(data.pickupPrice || 0) > 0">
+            <td>Prise en charge</td>
+            <td>-</td>
+            <td>-</td>
+            <td>{{ (data.pickupPrice || 0).toFixed(2) }} €</td>
+          </tr>
+        </table>
+        <div class="total">
+          <div class="price-details">
+            <div class="price-row">
+              <span class="label">Total HT:</span>
+              <span class="value">{{ total }} €</span>
+            </div>
+          </div>
+        </div>
+        <div v-if="data.additionalNotes && data.additionalNotes.trim()" class="additional-notes">
+          <h3>Mentions supplémentaires</h3>
+          <p v-html="formattedNotes"></p>
+        </div>
+      </div>
+    </template>
+  </BaseInvoiceTemplate>
 </template>
 
 <script setup lang="ts">
@@ -123,57 +143,49 @@ const total = computed(() => {
 </script>
 
 <style scoped>
-.invoice-template {
-  padding: 40px;
-  max-width: 1000px;
-  margin: 0 auto;
-  font-family: 'Helvetica Neue', Arial, sans-serif;
-  color: #2c3e50;
-  background: white;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 40px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid v-bind('settings?.primaryColor || "#EC6714"');
-}
-
-.header-left {
-  text-align: left;
-}
-
-.header-right {
-  text-align: right;
-}
-
-.logo {
-  max-width: 180px;
-  margin-bottom: 10px;
-}
-
-h1 {
-  color: #2c3e50;
-  font-size: 28px;
-  margin: 0;
-  font-weight: 600;
-}
-
-.client-info, .transport-details {
+.transport-details {
   background: #f8f9fa;
   padding: 20px;
   border-radius: 8px;
   margin-bottom: 30px;
 }
 
-h3 {
-  color: v-bind('settings?.primaryColor || "#EC6714"');
-  font-size: 18px;
-  margin: 0 0 15px 0;
-  font-weight: 600;
+.transport-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.transport-detail-row {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  align-items: center;
+  gap: 16px;
+}
+
+.transport-detail-row .label {
+  color: #666;
+  font-weight: 500;
+}
+
+.transport-detail-row .value {
+  color: #2c3e50;
+}
+
+.client-detail-row {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  align-items: center;
+  gap: 16px;
+}
+
+.client-detail-row .label {
+  color: #666;
+  font-weight: 500;
+}
+
+.client-detail-row .value {
+  color: #2c3e50;
 }
 
 .pricing {
@@ -210,12 +222,44 @@ td:last-child {
   border-left: 4px solid v-bind('settings?.primaryColor || "#EC6714"');
 }
 
+.price-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 15px;
+}
+
+.price-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 16px;
+  font-size: 0.7em;
+}
+
+.price-row .label {
+  color: #666;
+  font-weight: 500;
+}
+
+.price-row .value {
+  color: #2c3e50;
+  font-weight: 500;
+}
+
 .additional-notes {
   margin-top: 20px;
-  padding: 15px;
+  padding: 20px;
   background: #f8f9fa;
   border-radius: 8px;
   border-left: 4px solid v-bind('settings?.primaryColor || "#EC6714"');
+}
+
+.additional-notes h3 {
+  color: v-bind('settings?.primaryColor || "#EC6714"');
+  font-size: 18px;
+  margin: 0 0 15px 0;
+  font-weight: 600;
 }
 
 .additional-notes p {
@@ -223,14 +267,5 @@ td:last-child {
   color: #666;
   line-height: 1.3;
   white-space: pre-wrap;
-}
-
-.footer {
-  margin-top: 40px;
-  padding-top: 20px;
-  border-top: 1px solid #eee;
-  font-size: 0.9em;
-  color: #666;
-  text-align: center;
 }
 </style> 

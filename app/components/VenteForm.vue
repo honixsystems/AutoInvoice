@@ -25,31 +25,31 @@
         <div class="space-y-4 w-full">
           <h2 class="text-xl font-semibold mb-4">Informations du véhicule</h2>
           <UForm ref="vehicleFormRef" :schema="vehicleSchema" :state="state" class="space-y-4 w-full">
-            <UFormField label="Marque" name="vehicleBrand">
-              <UInput v-model="state.vehicleBrand" placeholder="Marque du véhicule" class="w-full" />
+            <UFormField label="Marque" name="vehicle_brand">
+              <UInput v-model="state.vehicle_brand" placeholder="Marque du véhicule" class="w-full" />
             </UFormField>
-            <UFormField label="Modèle" name="vehicleModel">
-              <UInput v-model="state.vehicleModel" placeholder="Modèle du véhicule" class="w-full" />
+            <UFormField label="Modèle" name="vehicle_model">
+              <UInput v-model="state.vehicle_model" placeholder="Modèle du véhicule" class="w-full" />
             </UFormField>
-            <UFormField label="Numéro de châssis" name="vehicleChassis">
-              <UInput v-model="state.vehicleChassis" placeholder="Numéro de châssis" class="w-full" />
+            <UFormField label="Numéro de châssis" name="vehicle_chassis">
+              <UInput v-model="state.vehicle_chassis" placeholder="Numéro de châssis" class="w-full" />
             </UFormField>
-            <UFormField label="Kilométrage" name="vehicleMileage">
-              <UInput v-model="state.vehicleMileage" type="number" placeholder="Kilométrage" class="w-full" />
+            <UFormField label="Kilométrage" name="vehicle_mileage">
+              <UInput v-model="state.vehicle_mileage" type="number" placeholder="Kilométrage" class="w-full" />
             </UFormField>
-            <UFormField label="Couleur" name="vehicleColor">
-              <UInput v-model="state.vehicleColor" placeholder="Couleur du véhicule" class="w-full" />
+            <UFormField label="Couleur" name="vehicle_color">
+              <UInput v-model="state.vehicle_color" placeholder="Couleur du véhicule" class="w-full" />
             </UFormField>
-            <UFormField label="Type de véhicule" name="vehicleType">
+            <UFormField label="Type de véhicule" name="vehicle_type">
               <USelect
-                v-model="state.vehicleType"
+                v-model="state.vehicle_type"
                 :items="vehicleTypeOptions"
                 placeholder="Sélectionnez le type de véhicule"
                 class="w-full"
               />
             </UFormField>
-            <UFormField label="Date de première immatriculation" name="vehicleFirstRegistration">
-              <UInput v-model="state.vehicleFirstRegistration" type="date" class="w-full" />
+            <UFormField label="Date de première immatriculation" name="vehicle_first_registration">
+              <UInput v-model="state.vehicle_first_registration" type="date" class="w-full" />
             </UFormField>
           </UForm>
         </div>
@@ -59,14 +59,14 @@
         <div class="space-y-4 w-full">
           <h2 class="text-xl font-semibold mb-4">Prix et options</h2>
           <UForm ref="priceFormRef" :schema="priceSchema" :state="state" class="space-y-4 w-full" @submit="onSubmit">
-            <UFormField label="Prix du véhicule" name="vehiclePrice">
-              <UInput v-model="state.vehiclePrice" type="number" step="0.01" class="w-full" />
+            <UFormField label="Prix du véhicule" name="vehicle_price">
+              <UInput v-model="state.vehicle_price" type="number" step="0.01" class="w-full" />
             </UFormField>
             <UFormField label="Acompte reçu" name="deposit">
               <UInput v-model="state.deposit" type="number" step="0.01" placeholder="Montant de l'acompte" class="w-full" />
             </UFormField>
-            <UFormField label="Mentions supplémentaires" name="additionalNotes">
-              <UTextarea v-model="state.additionalNotes" placeholder="Mentions supplémentaires" class="w-full" />
+            <UFormField label="Mentions supplémentaires" name="additional_notes">
+              <UTextarea v-model="state.additional_notes" placeholder="Mentions supplémentaires" class="w-full" />
             </UFormField>
             <div class="mt-4 p-4 rounded-lg">
               <p class="text-lg font-semibold text-primary text-right">Total: {{ total }} €</p>
@@ -148,27 +148,27 @@ defineShortcuts({
 const { addFacture, updateFacture, getFacture } = useFactures()
 
 const clientSchema = z.object({
-  clientName: z.string().min(1, 'Le nom du client est requis'),
-  clientPhone: z.string().optional(),
-  clientEmail: z.string().optional(),
-  clientAddress: z.string().optional(),
-  clientVAT: z.string().optional()
+  client_name: z.string().min(1, 'Le nom du client est requis'),
+  client_phone: z.string().optional(),
+  client_email: z.string().optional(),
+  client_address: z.string().optional(),
+  client_vat: z.string().optional()
 })
 
 const vehicleSchema = z.object({
-  vehicleBrand: z.string().min(1, 'La marque est requise'),
-  vehicleModel: z.string().min(1, 'Le modèle est requis'),
-  vehicleChassis: z.string().min(1, 'Le numéro de châssis est requis'),
-  vehicleMileage: z.number().transform((val) => Number(val)).pipe(z.number().min(0, 'Le kilométrage doit être positif')),
-  vehicleColor: z.string().optional(),
-  vehicleType: z.string().min(1, 'Le type de véhicule est requis'),
-  vehicleFirstRegistration: z.string().optional()
+  vehicle_brand: z.string().min(1, 'La marque est requise'),
+  vehicle_model: z.string().min(1, 'Le modèle est requis'),
+  vehicle_chassis: z.string().min(1, 'Le numéro de châssis est requis'),
+  vehicle_mileage: z.number().transform((val) => Number(val)).pipe(z.number().min(0, 'Le kilométrage doit être positif')),
+  vehicle_color: z.string().optional(),
+  vehicle_type: z.string().min(1, 'Le type de véhicule est requis'),
+  vehicle_first_registration: z.string().optional()
 })
 
 const priceSchema = z.object({
-  vehiclePrice: z.number().transform((val) => Number(val)).pipe(z.number().min(0, 'Le prix doit être positif')),
+  vehicle_price: z.number().transform((val) => Number(val)).pipe(z.number().min(0, 'Le prix doit être positif')),
   deposit: z.number().transform((val) => Number(val)).pipe(z.number().min(0, 'Le montant de l\'acompte doit être positif')),
-  additionalNotes: z.string().optional()
+  additional_notes: z.string().optional()
 })
 
 type ClientSchema = z.output<typeof clientSchema>
@@ -176,21 +176,21 @@ type VehicleSchema = z.output<typeof vehicleSchema>
 type PriceSchema = z.output<typeof priceSchema>
 
 const state = reactive<Partial<ClientSchema & VehicleSchema & PriceSchema>>({
-  clientName: undefined,
-  clientPhone: undefined,
-  clientEmail: undefined,
-  clientAddress: undefined,
-  clientVAT: undefined,
-  vehicleBrand: undefined,
-  vehicleModel: undefined,
-  vehicleChassis: undefined,
-  vehicleMileage: 0,
-  vehicleColor: undefined,
-  vehicleType: undefined,
-  vehicleFirstRegistration: undefined,
-  vehiclePrice: 0,
+  client_name: undefined,
+  client_phone: undefined,
+  client_email: undefined,
+  client_address: undefined,
+  client_vat: undefined,
+  vehicle_brand: undefined,
+  vehicle_model: undefined,
+  vehicle_chassis: undefined,
+  vehicle_mileage: 0,
+  vehicle_color: undefined,
+  vehicle_type: undefined,
+  vehicle_first_registration: undefined,
+  vehicle_price: 0,
   deposit: 0,
-  additionalNotes: undefined
+  additional_notes: undefined
 })
 
 const currentStep = ref(0)
@@ -224,7 +224,7 @@ const steps: StepperItem[] = [
 ]
 
 const total = computed(() => {
-  const price = Number(state.vehiclePrice) || 0
+  const price = Number(state.vehicle_price) || 0
   return price.toFixed(2)
 })
 
@@ -252,24 +252,19 @@ async function onSubmit(event: FormSubmitEvent<PriceSchema>) {
 
 const generateInvoice = async () => {
   try {
-    const factureData: Omit<FactureVente, 'id' | 'dateCreation' | 'dateModification'> = {
+    const factureData: Omit<FactureVente, 'id' | 'date_creation' | 'date_modification'> = {
       type: 'vente',
-      clientId: selectedClientId.value,
-      clientName: state.clientName!,
-      clientPhone: state.clientPhone,
-      clientEmail: state.clientEmail,
-      clientAddress: state.clientAddress,
-      clientVAT: state.clientVAT,
-      vehicleBrand: state.vehicleBrand!,
-      vehicleModel: state.vehicleModel!,
-      vehicleChassis: state.vehicleChassis!,
-      vehicleMileage: state.vehicleMileage!,
-      vehicleColor: state.vehicleColor,
-      vehicleType: state.vehicleType!,
-      vehicleFirstRegistration: state.vehicleFirstRegistration,
-      vehiclePrice: state.vehiclePrice!,
+      client_id: selectedClientId.value,
+      vehicle_brand: state.vehicle_brand!,
+      vehicle_model: state.vehicle_model!,
+      vehicle_chassis: state.vehicle_chassis!,
+      vehicle_mileage: state.vehicle_mileage!,
+      vehicle_color: state.vehicle_color,
+      vehicle_type: state.vehicle_type!,
+      vehicle_first_registration: state.vehicle_first_registration,
+      vehicle_price: state.vehicle_price!,
       deposit: state.deposit,
-      additionalNotes: state.additionalNotes
+      additional_notes: state.additional_notes
     }
 
     if (props.factureId) {
@@ -302,7 +297,7 @@ const generateInvoice = async () => {
 const downloadInvoice = async () => {
   try {
     // Vérifier que toutes les données requises sont présentes
-    if (!state.clientName || !state.vehicleBrand || !state.vehicleModel) {
+    if (!state.client_name || !state.vehicle_brand || !state.vehicle_model) {
       throw new Error('Les données du client et du véhicule sont requises')
     }
 
@@ -336,7 +331,7 @@ const downloadInvoice = async () => {
         name: 'PDF',
         extensions: ['pdf']
       }],
-      defaultPath: `facture_vente_${state.clientName}_${state.vehicleBrand}_${state.vehicleModel}.pdf`
+      defaultPath: `facture_vente_${state.client_name}_${state.vehicle_brand}_${state.vehicle_model}.pdf`
     })
     
     if (filePath) {

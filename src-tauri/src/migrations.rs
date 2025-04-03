@@ -86,6 +86,21 @@ pub fn get_migrations() -> Vec<Migration> {
                 CREATE INDEX IF NOT EXISTS idx_clients_name ON clients(name);
             ",
             kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 4,
+            description: "remove_redundant_client_fields",
+            sql: "
+                -- Suppression des index redondants
+                DROP INDEX IF EXISTS idx_factures_client_name;
+                -- Suppression des colonnes redondantes de la table factures
+                ALTER TABLE factures DROP COLUMN client_name;
+                ALTER TABLE factures DROP COLUMN client_phone;
+                ALTER TABLE factures DROP COLUMN client_email;
+                ALTER TABLE factures DROP COLUMN client_address;
+                ALTER TABLE factures DROP COLUMN client_vat;
+            ",
+            kind: MigrationKind::Up,
         }
     ]
 }
