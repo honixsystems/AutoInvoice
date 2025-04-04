@@ -81,7 +81,11 @@ jobs:
           echo "$CONTENT" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
       
-          echo "body=$CONTENT" >> $GITHUB_OUTPUT
+          {
+            echo "body<<EOF"
+            echo "$CONTENT"
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
 
       - name: Build and release Tauri app
         id: tauri
