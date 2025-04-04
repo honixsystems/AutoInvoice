@@ -55,23 +55,18 @@ jobs:
       - name: Install frontend deps
         run: pnpm install
 
-      # Step pour lire la version, cross-platform
-      - name: Read version from package.json (Linux/macOS)
-        if: runner.os != 'Windows'
+      - name: Read version from package.json
         id: version
+        shell: bash
         run: |
-          version=$(node -p "require('./package.json').version")
-          echo "version=$version" >> $GITHUB_OUTPUT
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            version=$(powershell -Command "((Get-Content package.json -Raw) | ConvertFrom-Json).version")
+          else
+            version=$(node -p "require('./package.json').version")
+          fi
           echo "VERSION=$version" >> $GITHUB_ENV
-
-      - name: Read version from package.json (Windows)
-        if: runner.os == 'Windows'
-        id: version
-        shell: pwsh
-        run: |
-          $pkg = Get-Content package.json | Out-String | ConvertFrom-Json
-          echo "version=$($pkg.version)" >> $env:GITHUB_OUTPUT
-          echo "VERSION=$($pkg.version)" >> $env:GITHUB_ENV
+          echo "version=$version" >> $GITHUB_OUTPUT
+      
 
       - name: Extract changelog for current version
         id: changelog
