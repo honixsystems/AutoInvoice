@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.4] - 2025-04-04
+
+- Amélioration de l'affichage
+- Ajout du choix des fonctionnalités affichées
+- Résolution des problèmes avec les factures de transport
+
 ## [1.1.3] - 2025-04-03
 
 - Ajout du numéro de TVA dans les paramètres de l'entreprise

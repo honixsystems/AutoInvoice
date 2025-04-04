@@ -7,23 +7,23 @@
     <template #client-details>
       <div class="client-detail-row">
         <span class="label">Nom:</span>
-        <span class="value">{{ data.clientName }}</span>
+        <span class="value">{{ data?.client?.name }}</span>
       </div>
-      <div class="client-detail-row" v-if="data.clientPhone">
+      <div class="client-detail-row" v-if="data?.client?.phone">
         <span class="label">Téléphone:</span>
-        <span class="value">{{ data.clientPhone }}</span>
+        <span class="value">{{ data?.client?.phone }}</span>
       </div>
-      <div class="client-detail-row" v-if="data.clientEmail">
+      <div class="client-detail-row" v-if="data?.client?.email">
         <span class="label">Email:</span>
-        <span class="value">{{ data.clientEmail }}</span>
+        <span class="value">{{ data?.client?.email }}</span>
       </div>
-      <div class="client-detail-row" v-if="data.clientAddress">
+      <div class="client-detail-row" v-if="data?.client?.address">
         <span class="label">Adresse:</span>
         <span class="value" v-html="formattedAddress"></span>
       </div>
-      <div class="client-detail-row" v-if="data.clientVAT">
+      <div class="client-detail-row" v-if="data?.client?.vat">
         <span class="label">TVA:</span>
-        <span class="value">{{ data.clientVAT }}</span>
+        <span class="value">{{ data?.client?.vat }}</span>
       </div>
     </template>
 
@@ -33,44 +33,52 @@
         <div class="transport-info">
           <div class="transport-detail-row">
             <span class="label">Date:</span>
-            <span class="value">{{ data.transportDate }}</span>
+            <span class="value"><strong>{{ formattedDate }}</strong></span>
           </div>
           <div class="transport-detail-row">
             <span class="label">Départ:</span>
-            <span class="value">{{ data.departureLocation }}</span>
+            <span class="value"><strong>{{ data?.departure_location }}</strong></span>
           </div>
           <div class="transport-detail-row">
             <span class="label">Arrivée:</span>
-            <span class="value">{{ data.arrivalLocation }}</span>
+            <span class="value"><strong>{{ data?.arrival_location }}</strong></span>
           </div>
         </div>
       </div>
 
       <div class="pricing">
-        <h3>Tarifs</h3>
+        <h3>Détails de la facture</h3>
         <table>
           <tr>
             <td>Distance</td>
-            <td>{{ data.distance || 0 }} km</td>
-            <td>{{ data.pricePerKm || 0 }} €/km</td>
-            <td>{{ ((data.distance || 0) * (data.pricePerKm || 0)).toFixed(2) }} €</td>
+            <td>{{ data?.distance || 0 }} km</td>
+            <td>{{ (data?.price_per_km || 0).toFixed(2) }} €/km</td>
+            <td>{{ ((data?.distance || 0) * (data?.price_per_km || 0)).toFixed(2) }} €</td>
           </tr>
-          <tr v-if="(data.pickupPrice || 0) > 0">
+          <tr v-if="(data?.pickup_price || 0) > 0">
             <td>Prise en charge</td>
             <td>-</td>
             <td>-</td>
-            <td>{{ (data.pickupPrice || 0).toFixed(2) }} €</td>
+            <td>{{ (data?.pickup_price || 0).toFixed(2) }} €</td>
           </tr>
         </table>
         <div class="total">
           <div class="price-details">
-            <div class="price-row">
-              <span class="label">Total HT:</span>
-              <span class="value">{{ total }} €</span>
+            <div class="price-row" v-if="settings?.displayVAT">
+              <span class="label">Montant HT:</span>
+              <span class="value">{{ priceDetails.priceHT }}</span>
+            </div>
+            <div class="price-row" v-if="settings?.displayVAT">
+              <span class="label">TVA ({{ settings?.vatRate || 21 }}%):</span>
+              <span class="value">{{ priceDetails.tva }}</span>
+            </div>
+            <div class="price-row total-row">
+              <span class="label"><strong>Total TTC:</strong></span>
+              <span class="value">{{ priceDetails.total }} €</span>
             </div>
           </div>
         </div>
-        <div v-if="data.additionalNotes && data.additionalNotes.trim()" class="additional-notes">
+        <div v-if="data?.additional_notes && data?.additional_notes.trim()" class="additional-notes">
           <h3>Mentions supplémentaires</h3>
           <p v-html="formattedNotes"></p>
         </div>
@@ -82,63 +90,64 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
 import { Store } from '@tauri-apps/plugin-store'
-
-interface TransportData {
-  clientName?: string
-  clientPhone?: string
-  clientEmail?: string
-  clientAddress?: string
-  clientVAT?: string
-  transportDate?: string
-  departureLocation?: string
-  arrivalLocation?: string
-  distance?: number
-  pricePerKm?: number
-  pickupPrice?: number
-  additionalNotes?: string
-}
-
-interface CompanySettings {
-  companyName: string
-  accountNumber: string
-  phoneNumber: string
-  address: string
-  footerNote?: string
-  primaryColor: string
-  vatRate: number
-}
+import { useFactures } from '~/composables/useFactures'
+import type { FactureTransport } from '~/composables/useFactures'
+import type { CompanySettings } from '~/types/settings'
 
 const props = defineProps<{
-  data: TransportData
+  factureId: string
 }>()
 
+const { getFacture } = useFactures()
+const data = ref<FactureTransport | null>(null)
 const settings = ref<CompanySettings | null>(null)
 
 onMounted(async () => {
   try {
+    // Charger les paramètres de l'entreprise
     const store = await Store.load('company-settings.json')
     const savedSettings = await store.get('settings') as CompanySettings | null
     if (savedSettings) {
       settings.value = savedSettings
     }
+
+    // Charger les données de la facture
+    const facture = await getFacture(props.factureId)
+    if (facture && facture.type === 'transport') {
+      data.value = facture
+    }
   } catch (error) {
-    console.error('Erreur lors du chargement des paramètres:', error)
+    console.error('Erreur lors du chargement des données:', error)
   }
 })
 
 const formattedNotes = computed(() => {
-  return props.data.additionalNotes?.replace(/\n/g, '<br>') || ''
+  return data.value?.additional_notes?.replace(/\n/g, '<br>') || ''
 })
 
 const formattedAddress = computed(() => {
-  return props.data.clientAddress?.replace(/\n/g, '<br>') || ''
+  return data.value?.client?.address?.replace(/\n/g, '<br>') || ''
 })
 
-const total = computed(() => {
-  const distance = props.data.distance || 0
-  const pricePerKm = props.data.pricePerKm || 0
-  const pickupPrice = props.data.pickupPrice || 0
-  return ((distance * pricePerKm) + pickupPrice).toFixed(2)
+const formattedDate = computed(() => {
+  if (!data.value?.transport_date) return ''
+  return new Date(data.value.transport_date).toLocaleDateString('fr-FR')
+})
+
+const priceDetails = computed(() => {
+  const distance = data.value?.distance || 0
+  const pricePerKm = data.value?.price_per_km || 0
+  const pickupPrice = data.value?.pickup_price || 0
+  const total = (distance * pricePerKm) + pickupPrice
+  const vatRate = settings.value?.vatRate || 21
+  const priceHT = total / (1 + vatRate / 100)
+  const tva = total - priceHT
+
+  return {
+    priceHT: priceHT.toFixed(2),
+    tva: tva.toFixed(2),
+    total: total.toFixed(2)
+  }
 })
 </script>
 
@@ -175,7 +184,7 @@ const total = computed(() => {
 .client-detail-row {
   display: grid;
   grid-template-columns: 250px 1fr;
-  align-items: center;
+  align-items: start;
   gap: 16px;
 }
 
@@ -197,7 +206,6 @@ table {
   border-collapse: collapse;
   margin: 20px 0;
   background: white;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 td {
@@ -247,6 +255,22 @@ td:last-child {
   font-weight: 500;
 }
 
+.total-row {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #eee;
+  font-weight: 600;
+  font-size: 1.3em;
+}
+
+.total-row .label {
+  color: #2c3e50;
+}
+
+.total-row .value {
+  color: v-bind('settings?.primaryColor || "#EC6714"');
+}
+
 .additional-notes {
   margin-top: 20px;
   padding: 20px;
@@ -267,5 +291,19 @@ td:last-child {
   color: #666;
   line-height: 1.3;
   white-space: pre-wrap;
+}
+
+h1 {
+  color: v-bind('settings?.primaryColor || "#EC6714"');
+  font-size: 28px;
+  margin: 0;
+  font-weight: 600;
+}
+
+h3 {
+  color: v-bind('settings?.primaryColor || "#EC6714"');
+  font-size: 18px;
+  margin: 0 0 15px 0;
+  font-weight: 600;
 }
 </style> 

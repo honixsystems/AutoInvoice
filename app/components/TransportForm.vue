@@ -1,52 +1,28 @@
 <template>
   <div class="max-w-4xl mx-auto p-6">
-    <UStepper disabled v-model="currentStep" :items="steps" class="w-full" size="md">
+    <UStepper disabled v-model="currentStep" :items="steps" class="w-full">
       <template #client>
         <div class="space-y-4 w-full">
-          <h2 class="text-xl font-semibold mb-4">Informations du client</h2>
-          <UCard class="mb-4">
-            <template #header>
-              <h3 class="text-base font-semibold leading-6 text-gray-900 dark:text-white">
-                Informations client
-              </h3>
-            </template>
-
-            <ClientSelect
-              v-model="selectedClientId"
-              :client-form-data="{
-                name: state.clientName,
-                phone: state.clientPhone,
-                email: state.clientEmail,
-                address: state.clientAddress,
-                vat: state.clientVAT
-              }"
-              @select-client="onSelectClient"
-              class="mb-4"
-            />
-
-            <UForm ref="clientFormRef" :schema="clientSchema" :state="state" class="space-y-4 w-full">
-              <UFormField label="Nom du client" name="clientName">
-                <UInput v-model="state.clientName" placeholder="Nom complet" class="w-full" />
-              </UFormField>
-              <UFormField label="Téléphone" name="clientPhone">
-                <UInput v-model="state.clientPhone" placeholder="Numéro de téléphone" class="w-full" />
-              </UFormField>
-              <UFormField label="Email" name="clientEmail">
-                <UInput v-model="state.clientEmail" type="email" placeholder="Adresse email" class="w-full" />
-              </UFormField>
-              <UFormField label="Adresse" name="clientAddress">
-                <UTextarea v-model="state.clientAddress" placeholder="Adresse complète" class="w-full" />
-              </UFormField>
-              <UFormField label="Numéro de TVA" name="clientVAT">
-                <UInput v-model="state.clientVAT" placeholder="Numéro de TVA" class="w-full" />
-              </UFormField>
-            </UForm>
-          </UCard>
+          <ClientSelect 
+            v-model="selectedClientId" 
+            @edit-client="isEditingClient = true"
+            @update:modelValue="(val) => { 
+              selectedClientId = val;
+              showClientForm = !val;
+              isEditingClient = false;
+            }"
+          />
+          <USeparator v-if="showClientForm || isEditingClient" label="OU" />
+          <ClientForm 
+            v-if="showClientForm || isEditingClient" 
+            v-model="selectedClientId" 
+            ref="clientFormRef" 
+          />
         </div>
       </template>
 
       <template #transport>
-        <div class="space-y-4">
+        <div class="space-y-4 w-full">
           <h2 class="text-xl font-semibold mb-4">Détails du transport</h2>
           <UForm ref="transportFormRef" :schema="transportSchema" :state="state" class="space-y-4 w-full">
             <UFormField label="Date du transport" name="transportDate">
@@ -92,7 +68,7 @@
         class="w-full flex justify-center items-center"
         v-if="currentStep > 0"
         color="neutral"
-        variant="outline"
+        variant="ghost"
         @click="prevStep"
       >
         Précédent
@@ -110,6 +86,7 @@
         size="lg"
         class="w-full flex justify-center items-center"
         v-if="currentStep === 2"
+        color="primary"
         @click="generateInvoice"
       >
         Générer la facture
@@ -217,6 +194,8 @@ const { addFacture, updateFacture, getFacture } = useFactures()
 
 const selectedClientId = ref<string>()
 const currentFactureId = ref<string>()
+const showClientForm = ref(true)
+const isEditingClient = ref(false)
 
 const onSelectClient = (client: Client | undefined) => {
   if (client) {
@@ -292,32 +271,10 @@ const nextStep = async () => {
   
   switch (currentStep.value) {
     case 0:
-      isValid = await clientFormRef.value?.validate()
-      if (isValid && !selectedClientId.value && state.clientName) {
-        try {
-          const { addClient } = useClients()
-          const newClientId = await addClient({
-            name: state.clientName,
-            phone: state.clientPhone,
-            email: state.clientEmail,
-            address: state.clientAddress,
-            vat: state.clientVAT
-          })
-          selectedClientId.value = newClientId
-          toast.add({
-            title: 'Succès',
-            description: 'Le client a été créé automatiquement',
-            color: 'success'
-          })
-        } catch (error) {
-          console.error('Erreur lors de la création du client:', error)
-          toast.add({
-            title: 'Erreur',
-            description: 'Une erreur est survenue lors de la création du client',
-            color: 'error'
-          })
-          return
-        }
+      if (isEditingClient.value || showClientForm.value) {
+        isValid = await clientFormRef.value?.validate()
+        if (!isValid) return
+        await clientFormRef.value?.submitForm()
       }
       break
     case 1:
@@ -335,4 +292,12 @@ const nextStep = async () => {
 const prevStep = () => {
   currentStep.value--
 }
+
+defineShortcuts({
+  'Enter': () => {
+    if (currentStep.value < 2) {
+      nextStep()
+    }
+  }
+})
 </script> 

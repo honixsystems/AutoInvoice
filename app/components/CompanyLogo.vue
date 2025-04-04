@@ -24,6 +24,5 @@ onMounted(async () => {
 .company-logo {
   max-width: 180px;
   height: auto;
-  margin-bottom: 10px;
 }
 </style> 

@@ -1,17 +1,7 @@
 <script setup lang="ts">
 import { Store } from '@tauri-apps/plugin-store'
 import { ref, onMounted } from 'vue'
-
-interface CompanySettings {
-  companyName: string
-  accountNumber: string
-  phoneNumber: string
-  address: string
-  footerNote?: string
-  primaryColor: string
-  vatRate: number
-  vatNumber: string
-}
+import type { CompanySettings } from '~/types/settings'
 
 const settings = ref<CompanySettings | null>(null)
 

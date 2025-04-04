@@ -2,13 +2,20 @@
 import { useFactures } from '~/composables/useFactures'
 import VentesTable from '~/components/VentesTable.vue'
 import TransportTable from '~/components/TransportTable.vue'
+import { Store } from '@tauri-apps/plugin-store'
+import type { AppSettings } from '~/types/settings'
 
 const { loadFactures, deleteFacture } = useFactures()
 const isLoading = ref(false)
 const error = ref<string | null>(null)
 const toast = useToast()
-
+const router = useRouter()
 const factures = ref<Facture[]>([])
+const appSettings = ref<AppSettings>({
+  autoUpdate: true,
+  enableVente: true,
+  enableTransport: true
+})
 
 const facturesVente = computed(() => factures.value.filter(f => f.type === 'vente'))
 const facturesTransport = computed(() => factures.value.filter(f => f.type === 'transport'))
@@ -16,10 +23,17 @@ const facturesTransport = computed(() => factures.value.filter(f => f.type === '
 onMounted(async () => {
   try {
     isLoading.value = true
+    // Charger les paramètres de l'application
+    const appStore = await Store.load('app-settings.json')
+    const savedAppSettings = await appStore.get('settings') as AppSettings | null
+    if (savedAppSettings) {
+      appSettings.value = savedAppSettings
+    }
+    // Charger les factures
     factures.value = await loadFactures()
   } catch (e) {
-    error.value = 'Erreur lors du chargement des factures'
-    console.error('Erreur lors du chargement des factures:', e)
+    error.value = 'Erreur lors du chargement des données'
+    console.error('Erreur lors du chargement:', e)
   } finally {
     isLoading.value = false
   }
@@ -79,7 +93,7 @@ const handleDeleteFacture = async (facture: any) => {
       <h1 class="text-3xl font-bold text-gray-900">Historique des factures</h1>
       <UButton
         color="primary"
-        to="/"
+        @click="router.back()"
         icon="i-heroicons-arrow-left"
       >
         Retour
@@ -87,7 +101,7 @@ const handleDeleteFacture = async (facture: any) => {
     </div>
 
     <div class="space-y-8">
-      <UCard>
+      <UCard v-if="appSettings.enableVente">
         <template #header>
           <div class="flex items-center justify-between">
             <h2 class="text-xl font-semibold">Factures de vente</h2>
@@ -102,7 +116,7 @@ const handleDeleteFacture = async (facture: any) => {
         />
       </UCard>
 
-      <UCard>
+      <UCard v-if="appSettings.enableTransport">
         <template #header>
           <div class="flex items-center justify-between">
             <h2 class="text-xl font-semibold">Factures de transport</h2>
@@ -116,6 +130,10 @@ const handleDeleteFacture = async (facture: any) => {
           @delete="handleDeleteFacture"
         />
       </UCard>
+
+      <div v-if="!appSettings.enableVente && !appSettings.enableTransport" class="text-center py-8">
+        <p class="text-gray-500">Aucune fonctionnalité n'est activée. Veuillez activer au moins une fonctionnalité dans les paramètres.</p>
+      </div>
     </div>
   </div>
 </template> 

@@ -98,6 +98,7 @@ import { computed, ref, onMounted } from 'vue'
 import { Store } from '@tauri-apps/plugin-store'
 import { useFactures } from '~/composables/useFactures'
 import type { FactureVente } from '~/composables/useFactures'
+import type { CompanySettings } from '~/types/settings'
 
 const props = defineProps<{
   factureId: string
@@ -107,16 +108,6 @@ const { getFacture } = useFactures()
 const data = ref<FactureVente | null>(null)
 const settings = ref<CompanySettings | null>(null)
 
-interface CompanySettings {
-  companyName: string
-  accountNumber: string
-  phoneNumber: string
-  address: string
-  footerNote?: string
-  primaryColor: string
-  vatRate: number
-  displayVAT: boolean
-}
 
 onMounted(async () => {
   try {

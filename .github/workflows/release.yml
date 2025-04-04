@@ -22,12 +22,12 @@ jobs:
           #- platform: macos-latest
           #  args: --target x86_64-apple-darwin
           #  artifact: macos-x64
-          #- platform: ubuntu-22.04
-          #  args: ""
-          #  artifact: linux
-          #- platform: windows-latest
-          #  args: ""
-          #  artifact: windows
+          - platform: ubuntu-22.04
+            args: ""
+            artifact: linux
+          - platform: windows-latest
+            args: ""
+            artifact: windows
 
     runs-on: ${{ matrix.platform }}
 
@@ -58,14 +58,28 @@ jobs:
       - name: Install frontend deps
         run: pnpm install
 
-      - name: Extract changelog
+      - name: Read version from package.json
+        id: version
+        run: |
+          VERSION=$(jq -r '.version' package.json)
+          echo "VERSION=$VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "::set-output name=VERSION::$VERSION"
+
+      - name: Extract changelog for current version
         id: changelog
         run: |
-          VERSION=$(node -p "require('./package.json').version")
-          CHANGELOG=$(awk -v ver="$VERSION" '/^## \[.*\]/{p=($2=="["ver"]")}p' CHANGELOG.md | tail -n +2 | sed '/^##/q' | sed '$d')
-          echo "CHANGELOG<<EOF" >> $GITHUB_ENV
-          echo "$CHANGELOG" >> $GITHUB_ENV
+          VERSION="${{ env.VERSION }}"
+          echo "Extracting changelog for version $VERSION..."
+      
+          CONTENT=$(awk "/## \[$VERSION\]/ {flag=1; next} /^## \[/ {flag=0} flag" CHANGELOG.md)
+          CONTENT=$(echo "$CONTENT" | sed '/^\s*$/d')
+      
+          echo "RELEASE_BODY<<EOF" >> $GITHUB_ENV
+          echo "$CONTENT" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
+      
+          echo "::set-output name=body::$CONTENT"
 
       - name: Build and release Tauri app
         id: tauri
@@ -74,11 +88,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          CHANGELOG: ${{ steps.changelog.outputs.CHANGELOG }}
         with:
           tagName: autoinvoice-v__VERSION__
           releaseName: AutoInvoice v__VERSION__
-          releaseBody: ${{ env.CHANGELOG }}
+          releaseBody: ${{ steps.changelog.outputs.body }}
           releaseDraft: false
           prerelease: false
           includeUpdaterJson: true

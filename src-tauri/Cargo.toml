@@ -21,7 +21,7 @@ features = [ ]
 
 [dependencies]
 tauri-plugin-shell = "2.2.0"
-tauri-plugin-notification = "2.2.1"
+tauri-plugin-notification = "2"
 tauri-plugin-os = "2.2.0"
 tauri-plugin-fs = "2.2.0"
 tauri-plugin-store = "2.2.0"

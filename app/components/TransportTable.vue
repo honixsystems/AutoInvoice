@@ -60,7 +60,7 @@ const handlePreview = (facture: FactureTransport) => {
 
 const columns: TableColumn<FactureTransport>[] = [
   {
-    accessorKey: 'clientName',
+    accessorKey: 'client.name',
     header: ({ column }) => {
       const isSorted = column.getIsSorted()
       return h(UButton, {
@@ -78,7 +78,7 @@ const columns: TableColumn<FactureTransport>[] = [
     }
   },
   {
-    accessorKey: 'transportDate',
+    accessorKey: 'transport_date',
     header: ({ column }) => {
       const isSorted = column.getIsSorted()
       return h(UButton, {
@@ -94,7 +94,7 @@ const columns: TableColumn<FactureTransport>[] = [
         onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
       })
     },
-    cell: ({ row }) => formatDate(row.getValue('transportDate'))
+    cell: ({ row }) => formatDate(row.getValue('transport_date'))
   },
   {
     accessorKey: 'route',
@@ -114,8 +114,8 @@ const columns: TableColumn<FactureTransport>[] = [
       })
     },
     cell: ({ row }) => {
-      const departure = row.original.departureLocation
-      const arrival = row.original.arrivalLocation
+      const departure = row.original.departure_location
+      const arrival = row.original.arrival_location
       if (!departure || !arrival) return '-'
       return `${departure} → ${arrival}`
     }
@@ -160,8 +160,8 @@ const columns: TableColumn<FactureTransport>[] = [
     },
     cell: ({ row }) => {
       const distance = Number(row.original.distance) || 0
-      const pricePerKm = Number(row.original.pricePerKm) || 0
-      const pickupPrice = Number(row.original.pickupPrice) || 0
+      const pricePerKm = Number(row.original.price_per_km) || 0
+      const pickupPrice = Number(row.original.pickup_price) || 0
       const total = (distance * pricePerKm) + pickupPrice
       return h('div', { class: 'text-right font-medium' }, formatPrice(total))
     }
@@ -198,7 +198,7 @@ const columns: TableColumn<FactureTransport>[] = [
 const table = useTemplateRef('table')
 const columnFilters = ref([])
 
-const sorting = ref([{ id: 'transportDate', desc: true }])
+const sorting = ref([{ id: 'transport_date', desc: true }])
 const page = ref(1)
 const itemsPerPage = ref(10)
 </script>
@@ -207,10 +207,10 @@ const itemsPerPage = ref(10)
   <div class="flex flex-col flex-1 w-full">
     <div class="flex px-4 py-3.5 border-b border-(--ui-border-accented) gap-4">
       <UInput
-        :model-value="table?.tableApi?.getColumn('clientName')?.getFilterValue() as string"
+        :model-value="table?.tableApi?.getColumn('client.name')?.getFilterValue() as string"
         class="max-w-sm"
         placeholder="Rechercher par client..."
-        @update:model-value="table?.tableApi?.getColumn('clientName')?.setFilterValue($event)"
+        @update:model-value="table?.tableApi?.getColumn('client.name')?.setFilterValue($event)"
       />
       <UInput
         :model-value="table?.tableApi?.getColumn('route')?.getFilterValue() as string"

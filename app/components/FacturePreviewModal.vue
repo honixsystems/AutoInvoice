@@ -18,7 +18,7 @@
         </div>
         <div v-else class="border rounded-lg p-4 overflow-y-auto max-h-[80vh] invoice-template">
           <VenteInvoiceTemplate v-if="facture?.type === 'vente'" :facture-id="factureId" />
-          <TransportInvoiceTemplate v-else-if="facture?.type === 'transport'" :data="facture" />
+          <TransportInvoiceTemplate v-else-if="facture?.type === 'transport'" :facture-id="factureId" />
         </div>
         <div class="flex justify-end mt-4 space-x-2">
           <UButton color="neutral" @click="$emit('update:modelValue', false)">Fermer</UButton>

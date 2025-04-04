@@ -45,7 +45,7 @@ const handleSubmit = async (data: FactureTransport) => {
       <h1 class="text-3xl font-bold text-gray-900">Éditer la facture de transport</h1>
       <UButton
         color="primary"
-        to="/historique"
+        @click="router.back()"
         icon="i-heroicons-arrow-left"
       >
         Retour

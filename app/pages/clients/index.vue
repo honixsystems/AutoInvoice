@@ -70,19 +70,19 @@ const handleClientUpdated = async () => {
         <h1 class="text-3xl font-bold text-gray-900">Gestion des Clients</h1>
         <div class="space-x-4 flex items-center">
           <UButton
+            color="neutral"
+            variant="ghost"
+            @click="openAddModal"
+          >
+            <UIcon name="i-heroicons-plus" class="mr-2" />
+            Nouveau Client
+          </UButton>
+          <UButton
             color="primary"
             to="/"
             icon="i-heroicons-arrow-left"
           >
             Retour
-          </UButton>
-          <UButton
-            color="primary"
-            variant="solid"
-            @click="openAddModal"
-          >
-            <UIcon name="i-heroicons-plus" class="mr-2" />
-            Nouveau Client
           </UButton>
         </div>
       </div>

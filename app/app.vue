@@ -3,6 +3,7 @@ import { useHead } from '#imports'
 import { check, Update } from '@tauri-apps/plugin-updater'
 import { relaunch } from '@tauri-apps/plugin-process'
 import { Store } from '@tauri-apps/plugin-store'
+import type { AppSettings } from '~/types/settings'
 
 interface UpdateResult {
 	version: string
@@ -26,7 +27,7 @@ onMounted(async () => {
 	try {
 		// Vérifier les paramètres d'auto-update
 		const store = await Store.load('app-settings.json')
-		const settings = await store.get('settings')
+		const settings = await store.get('settings') as AppSettings | null
 		const autoUpdate = settings?.autoUpdate ?? true // Par défaut true si non défini
 
 		if (autoUpdate) {

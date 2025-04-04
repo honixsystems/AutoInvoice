@@ -75,7 +75,7 @@ const columns: TableColumn<Client>[] = [
   {
     accessorKey: 'vat',
     header: 'Numéro de TVA',
-    cell: ({ row }) => row.getValue('vat') || 'AUCUN'
+    cell: ({ row }) => row.getValue('vat') || '-'
   },
   {
     accessorKey: 'date_creation',
@@ -88,6 +88,12 @@ const columns: TableColumn<Client>[] = [
     cell: ({ row }) => {
       const client = row.original
       return h('div', { class: 'flex gap-2' }, [
+        h(UButton, {
+          color: 'primary',
+          variant: 'ghost',
+          icon: 'i-heroicons-eye',
+          to: `/clients/${client.id}`,
+        }, () => 'Voir'),
         h(UButton, {
           color: 'neutral',
           variant: 'ghost',
