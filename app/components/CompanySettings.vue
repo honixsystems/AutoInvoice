@@ -41,6 +41,10 @@ const logoFile = ref<File | null>(null)
 
 const toast = useToast()
 
+const emit = defineEmits<{
+  saving: [boolean]
+}>()
+
 onMounted(async () => {
   try {
     const store = await Store.load('company-settings.json')
@@ -77,6 +81,7 @@ async function handleLogoChange(event: Event) {
 // Watcher pour sauvegarder automatiquement les changements
 watch(state, async (newState) => {
   try {
+    emit('saving', true)
     const store = await Store.load('company-settings.json')
     await store.set('settings', newState)
     await store.save()
@@ -87,8 +92,10 @@ watch(state, async (newState) => {
       const uint8Array = new Uint8Array(arrayBuffer)
       await writeFile('logo.png', uint8Array, { baseDir: BaseDirectory.AppLocalData })
     }
+    emit('saving', false)
   } catch (error) {
     console.error('Erreur lors de la sauvegarde:', error)
+    emit('saving', false)
     toast.add({
       title: 'Erreur',
       description: 'Une erreur est survenue lors de la sauvegarde.',

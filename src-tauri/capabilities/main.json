@@ -40,11 +40,18 @@
     "os:allow-locale",
     "fs:allow-document-read",
     "fs:allow-document-write",
+    "fs:default",
     {
       "identifier": "fs:scope",
       "allow": [
         {
           "path": "$APPDATA/autoinvoice/**/*"
+        },
+        {
+          "path": "$APPDATA/*"
+        },
+        {
+          "path": "$APPDATA/logo.png"
         }
       ]
     },

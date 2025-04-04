@@ -19,6 +19,8 @@ useHead({
 
 const colorMode = useColorMode()
 colorMode.value = 'light'
+colorMode.preference = 'light'
+colorMode.forced = true
 
 const showUpdateModal = ref(false)
 const updateInfo = ref<UpdateResult | null>(null)

@@ -44,6 +44,10 @@ const features: Feature[] = [
 
 const toast = useToast()
 
+const emit = defineEmits<{
+  saving: [boolean]
+}>()
+
 onMounted(async () => {
   try {
     const store = await Store.load('app-settings.json')
@@ -59,11 +63,14 @@ onMounted(async () => {
 // Watcher pour sauvegarder automatiquement les changements
 watch(state, async (newState) => {
   try {
+    emit('saving', true)
     const store = await Store.load('app-settings.json')
     await store.set('settings', newState)
     await store.save()
+    emit('saving', false)
   } catch (error) {
     console.error('Erreur lors de la sauvegarde:', error)
+    emit('saving', false)
     toast.add({
       title: 'Erreur',
       description: 'Une erreur est survenue lors de la sauvegarde.',

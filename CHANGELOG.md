@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1] - 2025-04-04
+
+- Résolution du problème de dark mode
+- Ajout d'un indicateur d'enregistrement automatique dans les paramètres
+- Formatage de la date de la mise à jour
+- Résolution d'un problème de permissions pour le logo sur Windows
+
 ## [1.2.0] - 2025-04-04
 
 - Ajout d'une page de configuration initiale

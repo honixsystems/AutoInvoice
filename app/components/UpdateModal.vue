@@ -36,6 +36,15 @@ const progressPercentage = computed(() => {
   if (props.totalSize === 0) return 0
   return (props.progress / props.totalSize) * 100
 })
+
+const formattedDate = computed(() => {
+  if (!props.update?.date) return ''
+  return new Date(props.update.date).toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  })
+})
 </script>
 
 <template>
@@ -53,7 +62,7 @@ const progressPercentage = computed(() => {
         </div>
 
         <p>
-          Une nouvelle version ({{ update?.version }}) est disponible depuis le {{ update?.date }}.
+          Une nouvelle version ({{ update?.version }}) est disponible depuis le {{ formattedDate }}.
         </p>
 
         <div v-if="update?.body" class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
