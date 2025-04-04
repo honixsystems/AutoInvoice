@@ -60,6 +60,7 @@ jobs:
 
       - name: Read version from package.json
         id: version
+        shell: bash
         run: |
           VERSION=$(jq -r '.version' package.json)
           echo "VERSION=$VERSION"
