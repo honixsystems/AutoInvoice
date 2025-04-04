@@ -60,13 +60,10 @@ jobs:
 
       - name: Read version from package.json
         id: version
-        shell: bash
         run: |
-          VERSION=$(jq -r '.version' package.json)
-          echo "VERSION=$VERSION"
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "::set-output name=VERSION::$VERSION"
-
+          echo "VERSION=$(node -p \"require('./package.json').version\")" >> $GITHUB_ENV
+          echo "::set-output name=VERSION::$(node -p \"require('./package.json').version\")"
+      
       - name: Extract changelog for current version
         id: changelog
         run: |
