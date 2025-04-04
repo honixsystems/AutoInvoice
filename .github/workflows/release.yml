@@ -70,6 +70,7 @@ jobs:
 
       - name: Extract changelog for current version
         id: changelog
+        shell: bash
         run: |
           VERSION="${{ env.VERSION }}"
           echo "Extracting changelog for version $VERSION..."
