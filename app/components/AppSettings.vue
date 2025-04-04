@@ -31,7 +31,7 @@ const features: Feature[] = [
     label: 'Facturation de vente',
     description: 'Permet de créer et gérer des factures pour la vente de véhicules',
     icon: 'i-heroicons-credit-card',
-    color: 'success'
+    color: 'primary'
   },
   {
     name: 'enableTransport',

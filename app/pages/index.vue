@@ -63,10 +63,7 @@ const navigateTo = (type: 'transport' | 'vente') => {
     <div class="container mx-auto px-4 py-8">
       <!-- Header avec navigation -->
       <header class="flex justify-between items-center mb-12">
-        <div class="flex items-center justify-center gap-2">
-          <CompanyLogo class="w-24 h-24" />
-          <h1 class="text-2xl font-bold text-primary">{{ companyName }}</h1>
-        </div>
+        <CompanyLogo class="w-24 h-24" />
         <UButton
           color="neutral"
           variant="soft"

@@ -3,12 +3,14 @@ import { useHead } from '#imports'
 import { check, Update } from '@tauri-apps/plugin-updater'
 import { relaunch } from '@tauri-apps/plugin-process'
 import { Store } from '@tauri-apps/plugin-store'
-import type { AppSettings } from '~/types/settings'
+import type { AppSettings, CompanySettings } from '~/types/settings'
+import { useRouter } from 'vue-router'
 
 interface UpdateResult {
 	version: string
 	date: string
 	body: string
+	downloadAndInstall: () => Promise<void>
 }
 
 useHead({
@@ -22,13 +24,24 @@ const showUpdateModal = ref(false)
 const updateInfo = ref<UpdateResult | null>(null)
 const downloadProgress = ref(0)
 const totalSize = ref(0)
+const router = useRouter()
 
 onMounted(async () => {
 	try {
+		// Vérifier si l'application est configurée
+		const companyStore = await Store.load('company-settings.json')
+		const companySettings = await companyStore.get('settings') as CompanySettings | null
+		const appStore = await Store.load('app-settings.json')
+		const appSettings = await appStore.get('settings') as AppSettings | null
+
+		// Si aucune configuration n'est détectée, rediriger vers la page de setup
+		if (!companySettings || !appSettings) {
+			router.push('/setup')
+			return
+		}
+
 		// Vérifier les paramètres d'auto-update
-		const store = await Store.load('app-settings.json')
-		const settings = await store.get('settings') as AppSettings | null
-		const autoUpdate = settings?.autoUpdate ?? true // Par défaut true si non défini
+		const autoUpdate = appSettings.autoUpdate ?? true // Par défaut true si non défini
 
 		if (autoUpdate) {
 			const update = await check()
@@ -37,12 +50,15 @@ onMounted(async () => {
 					version: update.version || 'N/A',
 					date: update.date || 'N/A',
 					body: update.body || '',
+					downloadAndInstall: update.downloadAndInstall
 				}
 				showUpdateModal.value = true
 			}
 		}
 	} catch (error) {
 		console.error('Error checking for updates:', error)
+		// En cas d'erreur, rediriger vers la page de setup
+		router.push('/setup')
 	}
 })
 

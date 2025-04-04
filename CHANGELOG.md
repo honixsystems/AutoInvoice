@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.2.0] - 2025-04-04
+
+- Ajout d'une page de configuration initiale
+- Changement du logo de l'application
+
 ## [1.1.4] - 2025-04-04
 
 - Amélioration de l'affichage
