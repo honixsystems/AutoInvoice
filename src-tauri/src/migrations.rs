@@ -101,6 +101,30 @@ pub fn get_migrations() -> Vec<Migration> {
                 ALTER TABLE factures DROP COLUMN client_vat;
             ",
             kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 5,
+            description: "add_cascade_delete_for_clients",
+            sql: "
+                -- Suppression de l'ancienne contrainte de clé étrangère
+                CREATE TABLE factures_temp AS SELECT * FROM factures;
+                DROP TABLE factures;
+                
+                -- Recréation de la table avec la nouvelle contrainte ON DELETE CASCADE
+                CREATE TABLE factures (
+                    id TEXT PRIMARY KEY,
+                    type TEXT NOT NULL CHECK (type IN ('vente', 'transport')),
+                    client_id TEXT REFERENCES clients(id) ON DELETE CASCADE,
+                    date_creation TEXT NOT NULL,
+                    date_modification TEXT NOT NULL,
+                    additional_notes TEXT
+                );
+                
+                -- Restauration des données
+                INSERT INTO factures SELECT * FROM factures_temp;
+                DROP TABLE factures_temp;
+            ",
+            kind: MigrationKind::Up,
         }
     ]
 }

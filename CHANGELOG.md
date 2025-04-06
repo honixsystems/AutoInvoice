@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.2.2] - 2025-04-06
+
+- Ajout d'une page de visualisation des factures
+- Ajout d'une palette de commande pour la navigation
+- Ajout de raccourcis clavier pour les actions principales
+
 ## [1.2.1] - 2025-04-04
 
 - Résolution du problème de dark mode

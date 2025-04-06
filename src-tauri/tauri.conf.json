@@ -33,7 +33,7 @@
 		"devUrl": "http://localhost:3000"
 	},
 	"productName": "AutoInvoice",
-	"version": "1.2.1",
+	"version": "1.2.2",
 	"identifier": "com.honix.autoinvoice",
 	"plugins": {
 		"updater": {

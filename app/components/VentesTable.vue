@@ -1,14 +1,12 @@
 <script setup lang="ts">
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
-import { useFactures, type FactureVente } from '~/composables/useFactures'
+import { type FactureVente } from '~/composables/useFactures'
 import FacturePreviewModal from './FacturePreviewModal.vue'
-
-const UBadge = resolveComponent('UBadge')
 const UButton = resolveComponent('UButton')
 const UModal = resolveComponent('UModal')
 
-const props = withDefaults(defineProps<{
+withDefaults(defineProps<{
   factures: FactureVente[]
   isLoading?: boolean
 }>(), {
@@ -16,7 +14,7 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-  (e: 'edit', facture: FactureVente): void
+  (e: 'show', facture: FactureVente): void
   (e: 'delete', facture: FactureVente): void
 }>()
 
@@ -25,19 +23,16 @@ const factureToDelete = ref<FactureVente | null>(null)
 const showPreviewModal = ref(false)
 const selectedFactureId = ref<string>()
 
-const formatDate = (date: string) => {
-  return new Date(date).toLocaleDateString('fr-FR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
-}
-
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat('fr-FR', {
     style: 'currency',
     currency: 'EUR'
   }).format(price)
+}
+
+const handlePreview = (facture: FactureVente) => {
+  selectedFactureId.value = facture.id
+  showPreviewModal.value = true
 }
 
 const handleDeleteClick = (facture: FactureVente) => {
@@ -51,12 +46,6 @@ const handleDeleteConfirm = () => {
     showDeleteModal.value = false
     factureToDelete.value = null
   }
-}
-
-const handlePreview = (facture: FactureVente) => {
-  console.log('Opening preview for facture:', facture.id)
-  selectedFactureId.value = facture.id
-  showPreviewModal.value = true
 }
 
 const columns: TableColumn<FactureVente>[] = [
@@ -177,14 +166,14 @@ const columns: TableColumn<FactureVente>[] = [
           color: 'primary',
           variant: 'ghost',
           icon: 'i-heroicons-eye',
-          onClick: () => handlePreview(facture)
-        }, () => 'Prévisualiser'),
+          onClick: () => emit('show', facture)
+        }, () => 'Voir'),
         h(UButton, {
           color: 'neutral',
           variant: 'ghost',
-          icon: 'i-heroicons-pencil-square',
-          onClick: () => emit('edit', facture)
-        }, () => 'Éditer'),
+          icon: 'i-heroicons-printer',
+          onClick: () => handlePreview(facture)
+        }, () => 'Imprimer'),
         h(UButton, {
           color: 'error',
           variant: 'ghost',

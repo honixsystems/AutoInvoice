@@ -22,14 +22,6 @@ const emit = defineEmits<{
 const showDeleteModal = ref(false)
 const factureToDelete = ref<Facture | null>(null)
 
-const formatDate = (date: string) => {
-  return new Date(date).toLocaleDateString('fr-FR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
-}
-
 const getFactureTypeLabel = (type: 'vente' | 'transport') => {
   return type === 'vente' ? 'Vente' : 'Transport'
 }

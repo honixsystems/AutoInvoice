@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import type { TabsItem } from '@nuxt/ui'
 
 const isSaving = ref(false)
+const router = useRouter()
 let savingTimeout: NodeJS.Timeout | null = null
 
 const items = ref<TabsItem[]>([
@@ -43,7 +44,7 @@ const handleSavingState = (saving: boolean) => {
         </div>
         <UButton
           color="primary"
-          to="/"
+          @click="router.back()"
           icon="i-heroicons-arrow-left"
         >
           Retour

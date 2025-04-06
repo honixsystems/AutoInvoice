@@ -46,9 +46,8 @@ onMounted(async () => {
   }
 })
 
-const handleEditFacture = (facture: Facture) => {
-  const route = facture.type === 'vente' ? '/vente/' : '/transport/'
-  navigateTo(route + facture.id)
+const handleShowFacture = (facture: Facture) => {
+  navigateTo(`/facture/${facture.id}`)
 }
 
 const handleDeleteFacture = async (facture: Facture) => {
@@ -137,7 +136,7 @@ const handleClientUpdated = async () => {
         <ClientFactures
           :factures="factures"
           :is-loading="isLoading"
-          @edit="handleEditFacture"
+          @show="handleShowFacture"
           @delete="handleDeleteFacture"
         />
       </div>

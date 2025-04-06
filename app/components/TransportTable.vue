@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
-import { useFactures, type FactureTransport } from '~/composables/useFactures'
-
-const UBadge = resolveComponent('UBadge')
+import { type FactureTransport } from '~/composables/useFactures'
+import FacturePreviewModal from './FacturePreviewModal.vue'
 const UButton = resolveComponent('UButton')
 const UModal = resolveComponent('UModal')
 const UInput = resolveComponent('UInput')
 
-const props = withDefaults(defineProps<{
+withDefaults(defineProps<{
   factures: FactureTransport[]
   isLoading?: boolean
 }>(), {
@@ -16,7 +15,7 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-  (e: 'edit', facture: FactureTransport): void
+  (e: 'show', facture: FactureTransport): void
   (e: 'delete', facture: FactureTransport): void
 }>()
 
@@ -24,14 +23,6 @@ const showDeleteModal = ref(false)
 const factureToDelete = ref<FactureTransport | null>(null)
 const showPreviewModal = ref(false)
 const selectedFactureId = ref<string>()
-
-const formatDate = (date: string) => {
-  return new Date(date).toLocaleDateString('fr-FR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
-}
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat('fr-FR', {
@@ -176,14 +167,14 @@ const columns: TableColumn<FactureTransport>[] = [
           color: 'primary',
           variant: 'ghost',
           icon: 'i-heroicons-eye',
-          onClick: () => handlePreview(facture)
-        }, () => 'Prévisualiser'),
+          onClick: () => emit('show', facture)
+        }, () => 'Voir'),
         h(UButton, {
           color: 'neutral',
           variant: 'ghost',
-          icon: 'i-heroicons-pencil-square',
-          onClick: () => emit('edit', facture)
-        }, () => 'Éditer'),
+          icon: 'i-heroicons-printer',
+          onClick: () => handlePreview(facture)
+        }, () => 'Imprimer'),
         h(UButton, {
           color: 'error',
           variant: 'ghost',

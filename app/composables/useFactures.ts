@@ -1,5 +1,3 @@
-import { ref } from 'vue'
-import Database from '@tauri-apps/plugin-sql'
 import type { Client } from './useClients'
 import { useDatabase } from './useDatabase'
 
@@ -77,11 +75,12 @@ export function useFactures() {
   const clientsComposable = useClients()
 
   // Charger les factures depuis la base de données
-  const loadFactures = async (): Promise<Facture[]> => {
+  const loadFactures = async (page: number = 1, limit: number = 10): Promise<Facture[]> => {
     try {
       // Charger toutes les factures de base
       const baseFactures = await db.select<FactureBaseDB[]>(
-        "SELECT * FROM factures ORDER BY date_creation DESC"
+        "SELECT * FROM factures ORDER BY date_creation DESC LIMIT ? OFFSET ?",
+        [limit, (page - 1) * limit]
       )
 
       const factures: Facture[] = []

@@ -1,22 +1,9 @@
 <script setup lang="ts">
 import type { Client } from '~/composables/useClients'
 
-const props = defineProps<{
+defineProps<{
   client: Client
 }>()
-
-const formatDate = (date: string) => {
-  if (!date) return '-'
-  try {
-    return new Date(date).toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
-  } catch (error) {
-    return date
-  }
-}
 </script>
 
 <template>

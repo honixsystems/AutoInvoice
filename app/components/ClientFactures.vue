@@ -13,7 +13,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'edit', facture: Facture): void
+  (e: 'show', facture: Facture): void
   (e: 'delete', facture: Facture): void
 }>()
 
@@ -21,19 +21,6 @@ const showDeleteModal = ref(false)
 const factureToDelete = ref<Facture | null>(null)
 const showPreviewModal = ref(false)
 const selectedFactureId = ref<string>()
-
-const formatDate = (date: string) => {
-  if (!date) return '-'
-  try {
-    return new Date(date).toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
-  } catch (error) {
-    return date
-  }
-}
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat('fr-FR', {
@@ -105,14 +92,14 @@ const columns: TableColumn<Facture>[] = [
           color: 'primary',
           variant: 'ghost',
           icon: 'i-heroicons-eye',
-          onClick: () => handlePreview(facture)
-        }, () => 'Prévisualiser'),
+          onClick: () => emit("show", facture)
+        }, () => 'Voir'),
         h(UButton, {
           color: 'neutral',
           variant: 'ghost',
-          icon: 'i-heroicons-pencil-square',
-          onClick: () => emit('edit', facture)
-        }, () => 'Éditer'),
+          icon: 'i-heroicons-printer',
+          onClick: () => handlePreview(facture)
+        }, () => 'Imprimer'),
         h(UButton, {
           color: 'error',
           variant: 'ghost',

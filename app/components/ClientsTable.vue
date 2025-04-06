@@ -33,19 +33,6 @@ const filteredClients = computed(() => {
   )
 })
 
-const formatDate = (date: string) => {
-  if (!date) return '-'
-  try {
-    return new Date(date).toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
-  } catch (error) {
-    return date
-  }
-}
-
 const handleDeleteClick = (client: Client) => {
   clientToDelete.value = client
   showDeleteModal.value = true

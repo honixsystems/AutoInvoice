@@ -39,32 +39,8 @@ onMounted(async () => {
   }
 })
 
-const formatDate = (date: string) => {
-  return new Date(date).toLocaleDateString('fr-FR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
-}
-
-const formatPrice = (price: number) => {
-  return new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: 'EUR'
-  }).format(price)
-}
-
-const getFactureTypeLabel = (type: 'vente' | 'transport') => {
-  return type === 'vente' ? 'Vente' : 'Transport'
-}
-
-const getFactureTypeColor = (type: 'vente' | 'transport') => {
-  return type === 'vente' ? 'green' : 'blue'
-}
-
-const editFacture = (facture: any) => {
-  const route = facture.type === 'vente' ? '/vente/' : '/transport/'
-  navigateTo(route + facture.id)
+const showFacture = (facture: any) => {
+  router.push(`/facture/${facture.id}`)
 }
 
 const handleDeleteFacture = async (facture: any) => {
@@ -111,7 +87,7 @@ const handleDeleteFacture = async (facture: any) => {
         <VentesTable
           :factures="facturesVente"
           :is-loading="isLoading"
-          @edit="editFacture"
+          @show="showFacture"
           @delete="handleDeleteFacture"
         />
       </UCard>
@@ -126,7 +102,7 @@ const handleDeleteFacture = async (facture: any) => {
         <TransportTable
           :factures="facturesTransport"
           :is-loading="isLoading"
-          @edit="editFacture"
+          @show="showFacture"
           @delete="handleDeleteFacture"
         />
       </UCard>

@@ -17,7 +17,6 @@ onMounted(async () => {
 
 <template>
   <img v-if="logoUrl" :src="logoUrl" alt="Logo de l'entreprise" class="company-logo">
-  <Placeholder class="company-logo" />
 </template>
 
 <style scoped>

@@ -106,13 +106,6 @@
         Générer la facture
       </UButton>
     </div>
-
-    <!-- Modal de prévisualisation -->
-    <FacturePreviewModal
-      v-if="currentFactureId"
-      v-model="showPreview"
-      :facture-id="currentFactureId"
-    />
   </div>
 </template>
 
@@ -120,9 +113,8 @@
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
 import type { StepperItem } from '@nuxt/ui'
-import { save } from '@tauri-apps/plugin-dialog'
-import { writeFile } from '@tauri-apps/plugin-fs'
 import { useFactures, type FactureVente } from '~/composables/useFactures'
+import { useRouter } from 'vue-router'
 
 const props = defineProps<{
   factureId?: string
@@ -137,6 +129,7 @@ defineShortcuts({
 })
 
 const { addFacture, updateFacture, getFacture } = useFactures()
+const router = useRouter()
 
 const clientSchema = z.object({
   client_name: z.string().min(1, 'Le nom du client est requis'),
@@ -185,7 +178,6 @@ const state = reactive<Partial<ClientSchema & VehicleSchema & PriceSchema>>({
 })
 
 const currentStep = ref(0)
-const showPreview = ref(false)
 const clientFormRef = ref()
 const vehicleFormRef = ref()
 const priceFormRef = ref()
@@ -239,7 +231,6 @@ async function onSubmit(event: FormSubmitEvent<PriceSchema>) {
     description: 'Le formulaire a été soumis avec succès.', 
     color: 'success' 
   })
-  showPreview.value = true
 }
 
 const generateInvoice = async () => {
@@ -275,7 +266,7 @@ const generateInvoice = async () => {
       })
     }
 
-    showPreview.value = true
+    router.push(`/facture/${currentFactureId.value}`)
   } catch (error) {
     console.error('Erreur lors de la génération de la facture:', error)
     toast.add({

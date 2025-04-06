@@ -16,10 +16,7 @@
         <div v-else-if="error" class="text-red-500 text-center">
           {{ error }}
         </div>
-        <div v-else class="border rounded-lg p-4 overflow-y-auto max-h-[80vh] invoice-template">
-          <VenteInvoiceTemplate v-if="facture?.type === 'vente'" :facture-id="factureId" />
-          <TransportInvoiceTemplate v-else-if="facture?.type === 'transport'" :facture-id="factureId" />
-        </div>
+        <FacturePreview v-else-if="facture" :facture="facture" />
         <div class="flex justify-end mt-4 space-x-2">
           <UButton color="neutral" @click="$emit('update:modelValue', false)">Fermer</UButton>
           <UButton color="primary" @click="handlePrint">Imprimer</UButton>
@@ -94,21 +91,6 @@ const handlePrint = () => {
   window.print()
 }
 
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  }).replace(/\//g, '_')
-}
-
-const formatString = (str: string) => {
-  return str.toLowerCase()
-    .replace(/[^a-z0-9]+/g, '_') // Remplace tous les caractères spéciaux et espaces par des underscores
-    .replace(/^_+|_+$/g, '') // Enlève les underscores au début et à la fin
-}
-
 const handleDownload = async () => {
   try {
     if (!facture.value) {
@@ -125,8 +107,7 @@ const handleDownload = async () => {
     })
     
     if (filePath) {
-      const templateRef = ref(null)
-      await templateRef.value?.generatePdf(filePath)
+      console.warn('La génération de PDF n\'est pas encore implémentée')
     }
   } catch (error) {
     console.error('Erreur lors de la génération du PDF:', error)

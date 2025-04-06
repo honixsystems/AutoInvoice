@@ -98,7 +98,7 @@ const navigateTo = (type: 'transport' | 'vente') => {
               <div :class="`absolute inset-0 bg-gradient-to-r ${facture.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`" />
               <div class="p-8 relative z-10">
                 <div class="flex flex-col items-center text-center">
-                  <div :class="`p-4 rounded-full bg-${facture.color}-100 mb-6 group-hover:scale-110 transition-transform duration-300`">
+                  <div :class="`p-4 rounded-full mb-6 group-hover:scale-110 transition-transform duration-300`">
                     <UIcon
                       :name="facture.icon"
                       class="w-12 h-12"

@@ -11,12 +11,12 @@
       </p>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto mb-12">
-        <div class="p-8 rounded-2xl bg-primary-50 border border-primary-100">
+        <div class="p-8 rounded-2xl bg-primary-50/20 border border-primary-100 text-start">
           <div class="flex items-center gap-4 mb-4">
             <UIcon name="i-heroicons-building-office" class="w-8 h-8 text-primary-500" />
             <h2 class="text-xl font-semibold text-gray-900">Informations entreprise</h2>
           </div>
-          <p class="text-lg text-gray-700">{{ companySettings?.companyName }}</p>
+          <p class="text-lg text-gray-700 font-semibold">{{ companySettings?.companyName }}</p>
           <p class="text-lg text-gray-700">{{ companySettings?.address }}</p>
         </div>
 
