@@ -19,24 +19,12 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div v-if="settings" class="company-info">
-    <h2>{{ settings.companyName }}</h2>
-    <p v-html="settings.address.replace(/\n/g, '<br>')"></p>
-    <p>Tél: {{ settings.phoneNumber }}</p>
-    <p>TVA: {{ settings.vatNumber }}</p>
+  <div v-if="settings">
+    <h2 class="text-primary font-bold text-md">{{ settings.companyName }}</h2>
+    <div class="text-neutral-500 text-xs">
+      <p v-html="settings.address.replace(/\n/g, '<br>')"></p>
+      <p>Tél: {{ settings.phoneNumber }}</p>
+      <p>TVA: {{ settings.vatNumber }}</p>
+    </div>
   </div>
 </template>
-
-<style scoped>
-.company-info h2 {
-  color: v-bind('settings?.primaryColor || "#EC6714"');
-  font-size: 24px;
-  font-weight: 600;
-}
-
-.company-info p {
-  margin: 3px 0;
-  color: #666;
-  line-height: 1.3;
-}
-</style> 

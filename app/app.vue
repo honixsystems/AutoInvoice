@@ -114,18 +114,3 @@ const handleUpdate = async () => {
 		</Body>
 	</Html>
 </template>
-
-<style>
-@media print {
-  body {
-    visibility: hidden;
-  }
-
-  #preview-container {
-    visibility: visible;
-    position: absolute;
-    left: 0;
-    top: 0;
-  }
-}
-</style>

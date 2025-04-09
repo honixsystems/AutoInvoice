@@ -25,14 +25,14 @@
         <div class="space-y-4 w-full">
           <h2 class="text-xl font-semibold mb-4">Détails du transport</h2>
           <UForm ref="transportFormRef" :schema="transportSchema" :state="state" class="space-y-4 w-full">
-            <UFormField label="Date du transport" name="transportDate">
-              <UInput v-model="state.transportDate" type="date" class="w-full" />
+            <UFormField label="Date du transport" name="transport_date">
+              <UInput v-model="state.transport_date" type="date" class="w-full" />
             </UFormField>
-            <UFormField label="Lieu de départ" name="departureLocation">
-              <UInput v-model="state.departureLocation" placeholder="Adresse de départ" class="w-full" />
+            <UFormField label="Lieu de départ" name="departure_location">
+              <UInput v-model="state.departure_location" placeholder="Adresse de départ" class="w-full" />
             </UFormField>
-            <UFormField label="Lieu d'arrivée" name="arrivalLocation">
-              <UInput v-model="state.arrivalLocation" placeholder="Adresse d'arrivée" class="w-full" />
+            <UFormField label="Lieu d'arrivée" name="arrival_location">
+              <UInput v-model="state.arrival_location" placeholder="Adresse d'arrivée" class="w-full" />
             </UFormField>
           </UForm>
         </div>
@@ -45,14 +45,14 @@
             <UFormField label="Distance (km)" name="distance">
               <UInput v-model="state.distance" type="number" class="w-full" />
             </UFormField>
-            <UFormField label="Prix par km" name="pricePerKm">
-              <UInput v-model="state.pricePerKm" type="number" step="0.01" class="w-full" />
+            <UFormField label="Prix par km" name="price_per_km">
+              <UInput v-model="state.price_per_km" type="number" step="0.01" class="w-full" />
             </UFormField>
-            <UFormField label="Prix de prise en charge" name="pickupPrice">
-              <UInput v-model="state.pickupPrice" type="number" step="0.01" class="w-full" />
+            <UFormField label="Prix de prise en charge" name="pickup_price">
+              <UInput v-model="state.pickup_price" type="number" step="0.01" class="w-full" />
             </UFormField>
-            <UFormField label="Mentions supplémentaires" name="additionalNotes">
-              <UTextarea v-model="state.additionalNotes" placeholder="Mentions supplémentaires" class="w-full" />
+            <UFormField label="Mentions supplémentaires" name="additional_notes">
+              <UTextarea v-model="state.additional_notes" placeholder="Mentions supplémentaires" class="w-full" />
             </UFormField>
             <div class="mt-4 p-4 rounded-lg">
               <p class="text-lg font-semibold text-primary text-right">Total: {{ total }} €</p>
@@ -100,47 +100,32 @@ import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
 import type { StepperItem } from '@nuxt/ui'
 import { useFactures } from '~/composables/useFactures'
-import type { Client } from '~/composables/useClients'
 import { useRouter } from 'vue-router'
 
-const clientSchema = z.object({
-  clientName: z.string().min(1, 'Le nom du client est requis'),
-  clientPhone: z.string().optional(),
-  clientEmail: z.string().optional(),
-  clientAddress: z.string().min(1, 'L\'adresse est requise'),
-  clientVAT: z.string().optional()
-})
-
 const transportSchema = z.object({
-  transportDate: z.string().min(1, 'La date de transport est requise'),
-  departureLocation: z.string().min(1, 'Le lieu de départ est requis'),
-  arrivalLocation: z.string().min(1, 'Le lieu d\'arrivée est requis')
+  transport_date: z.string().min(1, 'La date de transport est requise'),
+  departure_location: z.string().min(1, 'Le lieu de départ est requis'),
+  arrival_location: z.string().min(1, 'Le lieu d\'arrivée est requis')
 })
 
 const priceSchema = z.object({
   distance: z.number().transform((val) => Number(val)).pipe(z.number().min(0, 'La distance doit être positive')),
-  pricePerKm: z.number().transform((val) => Number(val)).pipe(z.number().min(0, 'Le prix par km doit être positif')),
-  pickupPrice: z.number().transform((val) => Number(val)).pipe(z.number().min(0, 'Le prix de prise en charge doit être positif')),
-  additionalNotes: z.string().optional()
+  price_per_km: z.number().transform((val) => Number(val)).pipe(z.number().min(0, 'Le prix par km doit être positif')),
+  pickup_price: z.number().transform((val) => Number(val)).pipe(z.number().min(0, 'Le prix de prise en charge doit être positif')),
+  additional_notes: z.string().optional()
 })
 
-type ClientSchema = z.output<typeof clientSchema>
 type TransportSchema = z.output<typeof transportSchema>
 type PriceSchema = z.output<typeof priceSchema>
 
-const state = reactive<Partial<ClientSchema & TransportSchema & PriceSchema>>({
-  clientName: undefined,
-  clientPhone: undefined,
-  clientEmail: undefined,
-  clientAddress: undefined,
-  clientVAT: undefined,
-  transportDate: undefined,
-  departureLocation: undefined,
-  arrivalLocation: undefined,
+const state = reactive<Partial<TransportSchema & PriceSchema>>({
+  transport_date: undefined,
+  departure_location: undefined,
+  arrival_location: undefined,
   distance: 0,
-  pricePerKm: 1,
-  pickupPrice: 15,
-  additionalNotes: undefined
+  price_per_km: 1,
+  pickup_price: 15,
+  additional_notes: undefined
 })
 
 const currentStep = ref(0)
@@ -170,8 +155,8 @@ const steps: StepperItem[] = [
 ]
 
 const total = computed(() => {
-  const distanceTotal = (state.distance || 0) * (state.pricePerKm || 0)
-  const pickupTotal = state.pickupPrice || 0
+  const distanceTotal = (state.distance || 0) * (state.price_per_km || 0)
+  const pickupTotal = state.pickup_price || 0
   return (distanceTotal + pickupTotal).toFixed(2)
 })
 
@@ -190,21 +175,13 @@ const isEditingClient = ref(false)
 
 const router = useRouter()
 
-const onSelectClient = (client: Client | undefined) => {
-  if (client) {
-    state.clientName = client.name
-    state.clientPhone = client.phone
-    state.clientEmail = client.email
-    state.clientAddress = client.address
-    state.clientVAT = client.vat
-  }
-}
-
 onMounted(async () => {
   if (props.factureId) {
     const facture = await getFacture(props.factureId)
     if (facture && facture.type === 'transport') {
+      console.log(facture)
       Object.assign(state, facture)
+      selectedClientId.value = facture.client?.id
     }
   }
 })
@@ -222,13 +199,13 @@ const generateInvoice = async () => {
     const factureData = {
       type: 'transport' as const,
       client_id: selectedClientId.value,
-      transport_date: state.transportDate!,
-      departure_location: state.departureLocation!,
-      arrival_location: state.arrivalLocation!,
+      transport_date: state.transport_date!,
+      departure_location: state.departure_location!,
+      arrival_location: state.arrival_location!,
       distance: state.distance!,
-      price_per_km: state.pricePerKm!,
-      pickup_price: state.pickupPrice!,
-      additional_notes: state.additionalNotes
+      price_per_km: state.price_per_km!,
+      pickup_price: state.pickup_price!,
+      additional_notes: state.additional_notes
     }
 
     if (props.factureId) {

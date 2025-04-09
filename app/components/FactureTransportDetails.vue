@@ -85,7 +85,7 @@ const calculateTotal = (facture: FactureTransport) => {
 
       <div v-if="facture.additional_notes" class="border-t border-gray-200 pt-4">
         <h4 class="text-sm font-semibold mb-2">Notes additionnelles</h4>
-        <p class="text-sm text-gray-700">{{ facture.additional_notes }}</p>
+        <p class="text-sm text-gray-700" v-html="formatNote(facture.additional_notes)"></p>
       </div>
 
       <div class="border-t border-gray-200 pt-4">

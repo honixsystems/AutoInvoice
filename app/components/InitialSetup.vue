@@ -64,7 +64,7 @@
               :class="{ 'opacity-75': !appState[feature.name] }"
             >
               <div class="flex items-start gap-4">
-                <div :class="`p-2 rounded-lg bg-${feature.color}-100`">
+                <div>
                   <UIcon
                     :name="feature.icon"
                     class="w-6 h-6"

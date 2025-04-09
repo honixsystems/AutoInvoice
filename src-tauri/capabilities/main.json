@@ -41,6 +41,8 @@
     "fs:allow-document-read",
     "fs:allow-document-write",
     "fs:default",
+    "fs:write-all",
+    "fs:allow-app-write-recursive",
     {
       "identifier": "fs:scope",
       "allow": [
@@ -61,6 +63,7 @@
     "dialog:allow-open",
     "dialog:allow-save",
     "sql:default",
-    "sql:allow-execute"
+    "sql:allow-execute",
+    "dialog:default"
   ]
 }

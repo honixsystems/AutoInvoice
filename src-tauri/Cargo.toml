@@ -29,7 +29,6 @@ tauri-plugin-dialog = "2.2.0"
 serde_json = "1"
 tauri-plugin-process = "2"
 tauri-plugin-sql = { version = "2", features = ["sqlite"] }
-typst-as-lib = "0.14.1"
 
 [dependencies.tauri]
 version = "2.2.5"

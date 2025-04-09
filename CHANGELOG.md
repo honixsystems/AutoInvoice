@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.3.0] - 2025-04-09
+
+- Ajout d'un systeme de multi-page pour les factures
+- Amélioration de l'UX lors de la sauvegarde des factures
+- Résolution des problèmes de permissions sur Windows
+- Résolution des problèmes d'impression des factures
+- Résolution du problème d'édition des factures
+- Suppression automatique des factures lors de la suppression d'un client
+- Suppression de l'enregistrement en PDF pour toutes les factures (à venir dans la prochaine version)
+- Résolution de problèmes mineurs
+
 ## [1.2.2] - 2025-04-06
 
 - Ajout d'une page de visualisation des factures

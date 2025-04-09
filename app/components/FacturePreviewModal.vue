@@ -20,7 +20,9 @@
         <div class="flex justify-end mt-4 space-x-2">
           <UButton color="neutral" @click="$emit('update:modelValue', false)">Fermer</UButton>
           <UButton color="primary" @click="handlePrint">Imprimer</UButton>
+          <!--
           <UButton color="primary" @click="handleDownload">Enregistrer en PDF</UButton>
+          -->
         </div>
       </div>
     </template>
@@ -88,7 +90,10 @@ watch(() => props.factureId, (newId) => {
 })
 
 const handlePrint = () => {
-  window.print()
+  if (facture.value) {
+    const url = `/print/${facture.value.id}`
+    navigateTo(url)
+  }
 }
 
 const handleDownload = async () => {
@@ -107,7 +112,8 @@ const handleDownload = async () => {
     })
     
     if (filePath) {
-      console.warn('La génération de PDF n\'est pas encore implémentée')
+      const url = `/pdf/${facture.value.id}?path=${encodeURIComponent(filePath)}`
+      navigateTo(url)
     }
   } catch (error) {
     console.error('Erreur lors de la génération du PDF:', error)

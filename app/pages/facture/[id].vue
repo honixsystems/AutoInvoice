@@ -22,7 +22,6 @@ onMounted(async () => {
 })
 
 const isEditing = ref(false)
-const isPreviewing = ref(false)
 
 const handleSave = async () => {
     if (!facture.value) return
@@ -30,12 +29,21 @@ const handleSave = async () => {
     isEditing.value = false
 }
 
+const handleBack = () => {
+    const previousRoute = router.options.history.state.back
+    if (typeof previousRoute === 'string' && (previousRoute.includes('/vente') || previousRoute.includes('/transport'))) {
+        router.push('/')
+    } else {
+        router.back()
+    }
+}
+
 const handleEdit = () => {
-    isEditing.value = true
+    navigateTo(`/${facture.value?.type === 'vente' ? 'vente' : 'transport'}/${facture.value?.id}`)
 }
 
 const handlePrint = () => {
-    isPreviewing.value = true
+    navigateTo(`/print/${facture.value?.id}`)
 }
 
 const handleDownload = async () => {
@@ -54,7 +62,9 @@ const handleDownload = async () => {
         })
         
         if (filePath) {
-            console.warn('La génération de PDF n\'est pas encore implémentée')
+            // Naviguer vers la page de génération de PDF
+            const url = `/pdf/${facture.value.id}?path=${encodeURIComponent(filePath)}`
+            navigateTo(url)
         }
     } catch (error) {
         console.error('Erreur lors de la génération du PDF:', error)
@@ -82,7 +92,7 @@ const getFactureMontant = (facture: Facture) => {
                 </p>
             </div>
             <div class="flex space-x-4">
-                <UButton color="primary" icon="i-heroicons-arrow-left" @click="router.back()">
+                <UButton color="primary" icon="i-heroicons-arrow-left" @click="handleBack">
                     Retour
                 </UButton>
                 <UButton color="neutral" variant="ghost" icon="i-heroicons-pencil-square" @click="handleEdit">
@@ -111,9 +121,11 @@ const getFactureMontant = (facture: Facture) => {
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-semibold">Détails de la facture</h3>
                     <div class="flex space-x-2">
+                    <!--
                         <UButton color="neutral" variant="ghost" icon="i-heroicons-document-arrow-down" @click="handleDownload">
                             Enregistrer en PDF
                         </UButton>
+                        -->
                         <UButton color="neutral" variant="ghost" icon="i-heroicons-printer" @click="handlePrint">
                             Imprimer
                         </UButton>
@@ -123,7 +135,5 @@ const getFactureMontant = (facture: Facture) => {
                 <FactureTransportDetails v-if="facture?.type === 'transport'" :facture-id="facture.id" />
             </div>
         </div>
-
-        <FacturePreviewModal v-if="isPreviewing && facture" :facture-id="facture.id" v-model="isPreviewing" />
     </div>
 </template>

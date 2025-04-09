@@ -16,12 +16,5 @@ onMounted(async () => {
 </script>
 
 <template>
-  <img v-if="logoUrl" :src="logoUrl" alt="Logo de l'entreprise" class="company-logo">
+  <img v-if="logoUrl" :src="logoUrl" alt="Logo de l'entreprise" class="w-[180px] h-auto">
 </template>
-
-<style scoped>
-.company-logo {
-  max-width: 180px;
-  height: auto;
-}
-</style> 

@@ -108,7 +108,7 @@ watch(state, async (newState) => {
             :class="{ 'opacity-75': !state[feature.name] }"
           >
             <div class="flex items-start gap-4">
-              <div :class="`p-2 rounded-lg bg-${feature.color}-100`">
+              <div :class="`rounded-lg`">
                 <UIcon
                   :name="feature.icon"
                   class="w-6 h-6"

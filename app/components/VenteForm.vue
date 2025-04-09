@@ -219,8 +219,8 @@ onMounted(async () => {
   if (props.factureId) {
     const facture = await getFacture(props.factureId)
     if (facture && facture.type === 'vente') {
-      // Copier toutes les propriétés de la facture dans l'état
       Object.assign(state, facture)
+      selectedClientId.value = facture.client?.id
     }
   }
 })
