@@ -16,7 +16,8 @@ pub fn generate_pdf(
     data: Value,
 ) -> Result<Vec<u8>, String> {
     let template_content = load_template(&app, template_name)?;
-    let template_id = format!("/resources/typst/templates/{}.typ", template_name);
+    let resource_dir = app.path().resource_dir().unwrap();
+    let template_id = format!("{}/resources/typst/templates/{}.typ", resource_dir.display(), template_name);
     let font_regular: Vec<u8> = read(
         app.path()
             .resource_dir()
@@ -38,8 +39,8 @@ pub fn generate_pdf(
     let builder = TypstEngine::builder();
     let builder = builder.fonts([font_regular, font_semibold]);
     let builder = builder.add_file_resolver(
-        FileSystemResolver::new(PathBuf::from("resources/typst/templates"))
-            .local_package_root(PathBuf::from("resources/typst/packages"))
+        FileSystemResolver::new(app.path().resource_dir().unwrap().join("resources/typst/templates"))
+            .local_package_root(app.path().resource_dir().unwrap().join("resources/typst/packages"))
             .into_cached(),
     );
     let builder = builder
