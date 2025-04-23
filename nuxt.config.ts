@@ -94,5 +94,10 @@ export default defineNuxtConfig({
 	devtools: {
 		enabled: false
 	},
+	nitro: {
+		experimental: {
+			wasm: true
+		}
+	},
 	compatibilityDate: "2025-03-01"
 });

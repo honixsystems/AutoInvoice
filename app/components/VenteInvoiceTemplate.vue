@@ -110,7 +110,7 @@
 import { computed, ref, onMounted } from 'vue'
 import { Store } from '@tauri-apps/plugin-store'
 import { useFactures } from '~/composables/useFactures'
-import type { FactureVente } from '~/composables/useFactures'
+import type { FactureVente } from '~/types/facture/vente'
 import type { CompanySettings } from '~/types/settings'
 
 const props = defineProps<{

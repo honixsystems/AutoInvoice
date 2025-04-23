@@ -2,6 +2,7 @@
 import { useFactures } from '~/composables/useFactures'
 import VentesTable from '~/components/VentesTable.vue'
 import TransportTable from '~/components/TransportTable.vue'
+import StatsCard from '~/components/StatsCard.vue'
 import { Store } from '@tauri-apps/plugin-store'
 import type { AppSettings } from '~/types/settings'
 
@@ -77,6 +78,8 @@ const handleDeleteFacture = async (facture: any) => {
     </div>
 
     <div class="space-y-8">
+      <StatsCard />
+
       <UCard v-if="appSettings.enableVente">
         <template #header>
           <div class="flex items-center justify-between">

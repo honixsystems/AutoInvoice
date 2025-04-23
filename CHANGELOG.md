@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.4.0] - 2025-04-23
+- Amélioration de la génération des factures (Typst)
+- Ajout du template de facture de vente
+- Ajout d'un numéro de facture plus simple
+- Ajout de la fonctionnalité d'annulation de facture
+- Ajout d'un QR Code sur les factures pour le règlement
+- Ajout d'un bouton pour exporter les factures en CSV
+- Ajout de l'export PDF
+- Amélioration de la prévisualisation des factures
+- Ajout de l'IBAN et du BIC dans les paramètres de l'entreprise
+- Ajout d'une carte de statistique des ventes
+- Ouverture automatique des fichiers exportés
+
 ## [1.3.0] - 2025-04-09
 
 - Ajout d'un systeme de multi-page pour les factures

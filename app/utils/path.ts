@@ -1,4 +1,4 @@
-import type { Facture } from '~/composables/useFactures'
+import type { Facture } from '~/types/facture/common'
 import { formatDateForFilename } from './date'
 
 const formatString = (str: string) => {

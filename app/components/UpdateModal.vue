@@ -21,16 +21,12 @@ const emit = defineEmits<{
   (e: 'update'): void
 }>()
 
-const downloading = ref(false)
-
-const handleUpdate = () => {
-  downloading.value = true
-  emit('update')
-}
-
-const closeModal = () => {
-  emit('update:show', false)
-}
+// Lancer la mise à jour automatiquement quand le modal s'ouvre
+watch(() => props.show, (newValue) => {
+  if (newValue && props.update) {
+    emit('update')
+  }
+})
 
 const progressPercentage = computed(() => {
   if (props.totalSize === 0) return 0
@@ -48,21 +44,15 @@ const formattedDate = computed(() => {
 </script>
 
 <template>
-  <UModal :open="show" @update:open="closeModal">
+  <UModal :open="show">
     <template #content>
       <div class="space-y-4 p-4">
         <div class="flex items-center justify-between">
-          <h3 class="text-lg font-semibold">Mise à jour disponible</h3>
-          <UButton
-            color="neutral"
-            variant="ghost"
-            icon="i-heroicons-x-mark-20-solid"
-            @click="closeModal"
-          />
+          <h3 class="text-lg font-semibold">Mise à jour en cours</h3>
         </div>
 
         <p>
-          Une nouvelle version ({{ update?.version }}) est disponible depuis le {{ formattedDate }}.
+          Installation de la version {{ update?.version }} disponible depuis le {{ formattedDate }}.
         </p>
 
         <div v-if="update?.body" class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
@@ -70,30 +60,11 @@ const formattedDate = computed(() => {
           <p class="whitespace-pre-line">{{ update.body }}</p>
         </div>
 
-        <div v-if="downloading" class="space-y-2">
+        <div class="space-y-2">
           <UProgress :value="progressPercentage" />
           <p class="text-sm text-gray-500 dark:text-gray-400">
             Téléchargement en cours... {{ Math.round(progressPercentage) }}%
           </p>
-        </div>
-
-        <div class="flex justify-end gap-3">
-          <UButton
-            color="neutral"
-            variant="ghost"
-            @click="closeModal"
-            :disabled="downloading"
-          >
-            Plus tard
-          </UButton>
-          <UButton
-            color="primary"
-            @click="handleUpdate"
-            :loading="downloading"
-            :disabled="downloading"
-          >
-            Mettre à jour
-          </UButton>
         </div>
       </div>
     </template>

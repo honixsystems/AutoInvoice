@@ -38,3 +38,9 @@ export const formatDateForFilename = (date: string) => {
     return date
   }
 }
+
+export const formatDateForTypst = (date: Date) => {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
+

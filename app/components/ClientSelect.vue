@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-import type { Client } from '~/composables/useClients'
+import type { Client } from '~/types/client'
 import { useClients } from '~/composables/useClients'
 import { useToast } from '#imports'
 

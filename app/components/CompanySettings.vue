@@ -2,7 +2,10 @@
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { Store } from '@tauri-apps/plugin-store'
-import { BaseDirectory, writeFile, readFile } from '@tauri-apps/plugin-fs'
+import { BaseDirectory, writeFile } from '@tauri-apps/plugin-fs'
+import { useSettings } from '~/composables/useSettings'
+
+const { companySettings, loadSettings } = useSettings()
 
 const schema = z.object({
   companyName: z.string().min(1, 'Le nom de l\'entreprise est requis'),
@@ -13,7 +16,9 @@ const schema = z.object({
   displayVAT: z.boolean().optional(),
   vatRate: z.number().min(0).max(100).step(0.1, 'Le taux de TVA doit être entre 0 et 100'),
   vatNumber: z.string().min(1, 'Le numéro de TVA est requis'),
-  logoUrl: z.string().optional()
+  logoUrl: z.string().optional(),
+  iban: z.string().regex(/^[A-Z]{2}[0-9A-Z]+$/, 'Format IBAN invalide'),
+  bic: z.string().regex(/^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/, 'Format BIC invalide')
 })
 
 type Schema = z.output<typeof schema>
@@ -27,7 +32,9 @@ const state = reactive<Partial<Schema>>({
   vatRate: 20,
   vatNumber: undefined,
   logoUrl: undefined,
-  displayVAT: false
+  displayVAT: false,
+  iban: undefined,
+  bic: undefined
 })
 
 watch(() => state.primaryColor, (newColor) => {
@@ -45,24 +52,20 @@ const emit = defineEmits<{
   saving: [boolean]
 }>()
 
-onMounted(async () => {
-  try {
-    const store = await Store.load('company-settings.json')
-    const savedSettings = await store.get('settings')
-    if (savedSettings) {
-      Object.assign(state, savedSettings)
-    }
+const updateLogoPreview = () => {
+  if (companySettings.value?.logoData) {
+    const blob = new Blob([companySettings.value.logoData], { type: 'image/png' })
+    logoPreview.value = URL.createObjectURL(blob)
+  } else {
+    logoPreview.value = null
+  }
+}
 
-    // Charger le logo existant
-    try {
-      const logoData = await readFile('logo.png', { baseDir: BaseDirectory.AppLocalData })
-      const blob = new Blob([logoData], { type: 'image/png' })
-      logoPreview.value = URL.createObjectURL(blob)
-    } catch (error) {
-      console.log('Aucun logo existant')
-    }
-  } catch (error) {
-    console.error('Erreur lors du chargement des paramètres:', error)
+onMounted(async () => {
+  await loadSettings()
+  if (companySettings.value) {
+    Object.assign(state, companySettings.value)
+    updateLogoPreview()
   }
 })
 
@@ -91,8 +94,12 @@ watch(state, async (newState) => {
       const arrayBuffer = await logoFile.value.arrayBuffer()
       const uint8Array = new Uint8Array(arrayBuffer)
       await writeFile('logo.png', uint8Array, { baseDir: BaseDirectory.AppLocalData })
+      if (companySettings.value) {
+        companySettings.value.logoData = uint8Array
+      }
     }
     emit('saving', false)
+    await loadSettings() // Recharger les paramètres après la sauvegarde
   } catch (error) {
     console.error('Erreur lors de la sauvegarde:', error)
     emit('saving', false)
@@ -157,7 +164,7 @@ watch(state, async (newState) => {
           </div>
 
           <UPopover>
-            <UFormField label="Couleur primaire de la facture" name="primaryColor" class="md:col-span-1">
+            <UFormField label="Couleur primaire de la facture" name="primaryColor" class="md:col-span-2">
               <UButton label="Choisir une couleur" color="neutral" variant="outline" class="w-full">
                 <template #leading>
                   <span :style="{ backgroundColor: state.primaryColor }" class="size-3 rounded-full" />
@@ -176,6 +183,14 @@ watch(state, async (newState) => {
               </div>
             </template>
           </UPopover>
+
+          <UFormField label="IBAN" name="iban">
+            <UInput v-model="state.iban" placeholder="FR7630001007941234567890189" class="w-full" />
+          </UFormField>
+
+          <UFormField label="BIC" name="bic">
+            <UInput v-model="state.bic" placeholder="BNPAFRPP" class="w-full" />
+          </UFormField>
 
           <UFormField label="Note de bas de page" name="footerNote" class="md:col-span-2">
             <UTextarea v-model="state.footerNote" placeholder="Texte qui apparaîtra en bas de vos factures" :rows="2"

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useFactures, type FactureVente } from '~/composables/useFactures'
-
+import { useFactures } from '~/composables/useFactures'
+import type { FactureVente } from '~/types/facture/vente'
 const route = useRoute()
 const router = useRouter()
 const { getFacture, updateFacture } = useFactures()

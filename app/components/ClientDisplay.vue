@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Client } from '~/composables/useClients'
+import type { Client } from '~/types/client'
 
 defineProps<{
   client: Client
@@ -17,7 +17,7 @@ defineProps<{
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div class="space-y-4">
         <div>
-          <h3 class="text-sm font-medium text-gray-500">Nom</h3>
+          <h3 class="text-sm font-medium text-gray-500">Nom/Raison sociale</h3>
           <p class="mt-1 text-lg">{{ client.name }}</p>
         </div>
         <div>

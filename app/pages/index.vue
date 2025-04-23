@@ -102,7 +102,6 @@ const navigateTo = (type: 'transport' | 'vente') => {
                     <UIcon
                       :name="facture.icon"
                       class="w-12 h-12"
-                      :class="`text-${facture.color}-500`"
                     />
                   </div>
                   <h3 class="text-2xl font-semibold text-gray-900 mb-3">{{ facture.title }}</h3>

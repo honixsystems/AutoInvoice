@@ -49,7 +49,7 @@ const handleDeleteConfirm = () => {
 const columns: TableColumn<Client>[] = [
   {
     accessorKey: 'name',
-    header: 'Nom'
+    header: 'Nom/Raison sociale'
   },
   {
     accessorKey: 'email',

@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import type { Facture } from '~/composables/useFactures'
+import type { Facture } from '~/types/facture/common'
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '#ui/types'
-import FacturePreviewModal from './FacturePreviewModal.vue'
 
 const UButton = resolveComponent('UButton')
 const UModal = resolveComponent('UModal')
@@ -19,8 +18,6 @@ const emit = defineEmits<{
 
 const showDeleteModal = ref(false)
 const factureToDelete = ref<Facture | null>(null)
-const showPreviewModal = ref(false)
-const selectedFactureId = ref<string>()
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat('fr-FR', {
@@ -40,11 +37,6 @@ const handleDeleteConfirm = () => {
     showDeleteModal.value = false
     factureToDelete.value = null
   }
-}
-
-const handlePreview = (facture: Facture) => {
-  selectedFactureId.value = facture.id
-  showPreviewModal.value = true
 }
 
 const columns: TableColumn<Facture>[] = [
@@ -94,12 +86,6 @@ const columns: TableColumn<Facture>[] = [
           icon: 'i-heroicons-eye',
           onClick: () => emit("show", facture)
         }, () => 'Voir'),
-        h(UButton, {
-          color: 'neutral',
-          variant: 'ghost',
-          icon: 'i-heroicons-printer',
-          onClick: () => handlePreview(facture)
-        }, () => 'Imprimer'),
         h(UButton, {
           color: 'error',
           variant: 'ghost',
@@ -173,11 +159,5 @@ const columns: TableColumn<Facture>[] = [
         </UCard>
       </template>
     </UModal>
-
-    <FacturePreviewModal
-      v-if="selectedFactureId"
-      :facture-id="selectedFactureId"
-      v-model="showPreviewModal"
-    />
   </UCard>
 </template> 

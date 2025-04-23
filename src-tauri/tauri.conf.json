@@ -15,7 +15,9 @@
 			"icons/icon.icns",
 			"icons/icon.ico"
 		],
-		"resources": [],
+		"resources": [
+			"resources/**/*"
+		],
 		"externalBin": [],
 		"copyright": "",
 		"category": "DeveloperTool",
@@ -33,7 +35,7 @@
 		"devUrl": "http://localhost:3000"
 	},
 	"productName": "AutoInvoice",
-	"version": "1.3.0",
+	"version": "1.4.0",
 	"identifier": "com.honix.autoinvoice",
 	"plugins": {
 		"updater": {

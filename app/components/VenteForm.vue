@@ -68,6 +68,48 @@
             <UFormField label="Mentions supplémentaires" name="additional_notes">
               <UTextarea v-model="state.additional_notes" placeholder="Mentions supplémentaires" class="w-full" />
             </UFormField>
+            <UFormField label="Livré avec" name="delivered_with">
+              <div class="space-y-2">
+                <UInput
+                  ref="deliveredInputRef"
+                  v-model="newDeliveredItem"
+                  placeholder="Ajouter un élément (appuyez sur Entrée)"
+                  class="w-full"
+                  @keydown.enter.prevent="addDeliveredItem"
+                />
+                <div v-if="newDeliveredItem" class="flex flex-wrap gap-2">
+                  <UBadge
+                    v-for="suggestion in deliveredSuggestions.filter(s => s.toLowerCase().includes(newDeliveredItem.toLowerCase()))"
+                    :key="suggestion"
+                    color="neutral"
+                    variant="soft"
+                    class="cursor-pointer hover:bg-gray-100"
+                    @click="() => {
+                      newDeliveredItem = suggestion;
+                      addDeliveredItem();
+                      nextTick(() => {
+                        deliveredInputRef.value?.$el?.querySelector('input')?.focus();
+                      });
+                    }"
+                  >
+                    {{ suggestion }}
+                  </UBadge>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  <UBadge
+                    v-for="(item, index) in state.delivered_with"
+                    :key="index"
+                    color="primary"
+                    variant="soft"
+                    class="cursor-pointer"
+                    @click="removeDeliveredItem(index)"
+                  >
+                    {{ item }}
+                    <UIcon name="i-heroicons-x-mark" class="ml-1" />
+                  </UBadge>
+                </div>
+              </div>
+            </UFormField>
             <div class="mt-4 p-4 rounded-lg">
               <p class="text-lg font-semibold text-primary text-right">Total: {{ total }} €</p>
             </div>
@@ -113,7 +155,7 @@
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
 import type { StepperItem } from '@nuxt/ui'
-import { useFactures, type FactureVente } from '~/composables/useFactures'
+import { useFactures } from '~/composables/useFactures'
 import { useRouter } from 'vue-router'
 
 const props = defineProps<{
@@ -152,7 +194,8 @@ const vehicleSchema = z.object({
 const priceSchema = z.object({
   vehicle_price: z.number().transform((val) => Number(val)).pipe(z.number().min(0, 'Le prix doit être positif')),
   deposit: z.number().transform((val) => Number(val)).pipe(z.number().min(0, 'Le montant de l\'acompte doit être positif')),
-  additional_notes: z.string().optional()
+  additional_notes: z.string().optional(),
+  delivered_with: z.array(z.string()).default([])
 })
 
 type ClientSchema = z.output<typeof clientSchema>
@@ -174,7 +217,8 @@ const state = reactive<Partial<ClientSchema & VehicleSchema & PriceSchema>>({
   vehicle_first_registration: undefined,
   vehicle_price: 0,
   deposit: 0,
-  additional_notes: undefined
+  additional_notes: undefined,
+  delivered_with: []
 })
 
 const currentStep = ref(0)
@@ -185,6 +229,15 @@ const selectedClientId = ref<string>()
 const showClientForm = ref(true)
 const isEditingClient = ref(false)
 const currentFactureId = ref<string>()
+const newDeliveredItem = ref('')
+const deliveredInputRef = ref()
+const deliveredSuggestions = ref([
+  'Carnet d\'entretien',
+  'Certificat de conformité',
+  'Contrôle technique',
+  'Carpass',
+  'Demande d\'immatriculation'
+])
 
 const steps: StepperItem[] = [
   {
@@ -208,7 +261,7 @@ const steps: StepperItem[] = [
 ]
 
 const total = computed(() => {
-  const price = Number(state.vehicle_price) || 0
+  const price = (Number(state.vehicle_price) || 0) - (Number(state.deposit) || 0)
   return price.toFixed(2)
 })
 
@@ -235,8 +288,8 @@ async function onSubmit(event: FormSubmitEvent<PriceSchema>) {
 
 const generateInvoice = async () => {
   try {
-    const factureData: Omit<FactureVente, 'id' | 'date_creation' | 'date_modification'> = {
-      type: 'vente',
+    const factureData = {
+      type: 'vente' as const,
       client_id: selectedClientId.value,
       vehicle_brand: state.vehicle_brand!,
       vehicle_model: state.vehicle_model!,
@@ -247,7 +300,8 @@ const generateInvoice = async () => {
       vehicle_first_registration: state.vehicle_first_registration,
       vehicle_price: state.vehicle_price!,
       deposit: state.deposit,
-      additional_notes: state.additional_notes
+      additional_notes: state.additional_notes,
+      delivered_with: state.delivered_with || []
     }
 
     if (props.factureId) {
@@ -313,4 +367,23 @@ const vehicleTypeOptions = ref([
   { label: 'Cabriolet', value: 'CABRIOLET' },
   { label: 'Autre', value: 'AUTRE' }
 ])
+
+const addDeliveredItem = () => {
+  if (newDeliveredItem.value.trim()) {
+    if (!state.delivered_with) {
+      state.delivered_with = []
+    }
+    state.delivered_with.push(newDeliveredItem.value.trim())
+    newDeliveredItem.value = ''
+    nextTick(() => {
+      deliveredInputRef.value?.$el?.querySelector('input')?.focus()
+    })
+  }
+}
+
+const removeDeliveredItem = (index: number) => {
+  if (state.delivered_with) {
+    state.delivered_with.splice(index, 1)
+  }
+}
 </script> 

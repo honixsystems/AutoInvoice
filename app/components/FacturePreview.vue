@@ -1,16 +1,69 @@
 <template>
-  <UCard class="p-0 invoice-preview max-h-[70vh] overflow-auto flex justify-center items-start">
-    <div class="border border-neutral-200 rounded-2xl overflow-hidden" style="transform: scale(0.5); transform-origin: top center;">
-      <VenteInvoiceTemplate v-if="facture?.type === 'vente'" :facture-id="facture.id" />
-      <TransportInvoiceTemplate v-else-if="facture?.type === 'transport'" :facture-id="facture.id" />
+  <UCard class="p-0 invoice-preview max-h-[70vh] overflow-auto flex justify-center items-start" :ui="{ body: 'p-0 sm:p-0 w-full' }">
+    <div v-if="isLoading" class="w-full h-[70vh] flex items-center justify-center">
+      <UProgress
+        animation="carousel"
+        :value="100"
+        indeterminate
+        class="w-32"
+      />
+    </div>
+    <div v-else-if="pdfUrl" class="w-full h-full">
+      <iframe :src="pdfUrl" class="w-full h-[70vh]" frameborder="0"></iframe>
+    </div>
+    <div v-else class="w-full h-full flex items-center justify-center">
+      <UAlert v-if="errorMessage" color="error" :title="errorMessage" />
     </div>
   </UCard>
 </template>
 
 <script setup lang="ts">
-import type { Facture } from '~/composables/useFactures'
+import type { Facture } from '~/types/facture/common'
+import { useTypst } from '~/composables/useTypst'
+import { ref, onMounted, watch } from 'vue'
+import { useSettings } from '~/composables/useSettings'
 
-defineProps<{
+const props = defineProps<{
   facture: Facture
 }>()
+
+const pdfUrl = ref<string | null>(null)
+const isLoading = ref(true)
+const { generatePdf } = useTypst()
+const { companySettings, loadSettings } = useSettings()
+const errorMessage = ref<string | null>(null)
+
+const generatePreview = async () => {
+  try {
+    isLoading.value = true
+    errorMessage.value = null
+    
+    if (!companySettings.value) {
+      await loadSettings()
+      if (!companySettings.value) {
+        throw new Error('Paramètres de l\'entreprise non trouvés')
+      }
+    }
+    
+    const typstData = props.facture.toTypst(companySettings.value)
+    const pdfData = await generatePdf(props.facture.type, typstData)
+    const blob = new Blob([new Uint8Array(pdfData)], { type: 'application/pdf' })
+    pdfUrl.value = URL.createObjectURL(blob)
+  } catch (error) {
+    console.error('Erreur lors de la génération du PDF:', error)
+    errorMessage.value = 'Erreur lors de la génération du PDF'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// Générer la prévisualisation au montage du composant
+onMounted(() => {
+  generatePreview()
+})
+
+// Regénérer la prévisualisation si la facture change
+watch(() => props.facture, () => {
+  generatePreview()
+}, { deep: true })
 </script>
