@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import * as z from 'zod'
-import type { Client } from '~/composables/useClients'
+import type { Client } from '~/types/client'
 import type { FormSubmitEvent } from '@nuxt/ui'
 
 const props = withDefaults(defineProps<{
@@ -155,7 +155,7 @@ watch(() => props.modelValue, async (newVal) => {
         </h3>
       </template>
       <UForm ref="clientFormRef" :schema="clientSchema" :state="state" class="space-y-4 w-full" @submit="onSubmit">
-        <UFormField label="Nom du client" name="name">
+        <UFormField label="Nom du client/Raison sociale" name="name">
           <UInput v-model="state.name" placeholder="Nom complet" class="w-full" />
         </UFormField>
         <UFormField label="Téléphone" name="phone">

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useFactures } from '~/composables/useFactures'
-import type { FactureTransport } from '~/composables/useFactures'
+import type { FactureTransport } from '~/types/facture/transport'
 
 const props = defineProps<{
   factureId: string
@@ -62,11 +62,11 @@ const calculateTotal = (facture: FactureTransport) => {
         <div class="grid grid-cols-2 gap-4">
           <div>
             <p class="text-sm text-gray-500">Lieu de départ</p>
-            <p class="text-sm font-medium">{{ facture.departure_location }}</p>
+            <p class="text-sm font-medium truncate">{{ facture.departure_location }}</p>
           </div>
           <div>
             <p class="text-sm text-gray-500">Lieu d'arrivée</p>
-            <p class="text-sm font-medium">{{ facture.arrival_location }}</p>
+            <p class="text-sm font-medium truncate">{{ facture.arrival_location }}</p>
           </div>
           <div>
             <p class="text-sm text-gray-500">Distance</p>
@@ -85,7 +85,7 @@ const calculateTotal = (facture: FactureTransport) => {
 
       <div v-if="facture.additional_notes" class="border-t border-gray-200 pt-4">
         <h4 class="text-sm font-semibold mb-2">Notes additionnelles</h4>
-        <p class="text-sm text-gray-700" v-html="formatNote(facture.additional_notes)"></p>
+        <p class="text-sm text-gray-700 break-words" v-html="formatNote(facture.additional_notes)"></p>
       </div>
 
       <div class="border-t border-gray-200 pt-4">

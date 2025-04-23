@@ -1,27 +1,7 @@
 import { ref } from 'vue'
 import Database from '@tauri-apps/plugin-sql'
-
-export interface Client {
-  id: string
-  name: string
-  phone?: string
-  email?: string
-  address?: string
-  vat?: string
-  date_creation: string
-  date_modification: string
-}
-
-interface ClientDB {
-  id: string
-  name: string
-  phone?: string
-  email?: string
-  address?: string
-  vat?: string
-  date_creation: string
-  date_modification: string
-}
+import { Client } from '~/types/client'
+import type { ClientDB } from '~/types/client'
 
 export function useClients() {
   const db = ref<Database | null>(null)
@@ -39,7 +19,6 @@ export function useClients() {
   // Charger les clients depuis la base de données
   const loadClients = async (): Promise<Client[]> => {
     try {
-
       if (!db.value) {
         await initDatabase()
       }
@@ -48,11 +27,7 @@ export function useClients() {
         "SELECT * FROM clients ORDER BY name ASC"
       )
 
-      return result.map(client => ({
-        ...client,
-        date_creation: client.date_creation,
-        date_modification: client.date_modification
-      }))
+      return result.map(client => new Client(client))
     } catch (e) {
       console.error('Erreur lors du chargement des clients:', e)
       return []
@@ -151,12 +126,7 @@ export function useClients() {
 
       if (result.length === 0 || !result[0]) return undefined
 
-      const client = result[0]
-      return {
-        ...client,
-        date_creation: client!.date_creation,
-        date_modification: client!.date_modification
-      }
+      return new Client(result[0])
     } catch (e) {
       console.error('Erreur lors de la récupération du client:', e)
       return undefined

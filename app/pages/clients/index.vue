@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useClients } from '~/composables/useClients'
-import type { Client } from '~/composables/useClients'
+import type { Client } from '~/types/client'
 import ClientsTable from '~/components/ClientsTable.vue'
 import ClientForm from '~/components/ClientForm.vue'
 

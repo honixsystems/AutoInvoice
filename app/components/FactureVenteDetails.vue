@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useFactures } from '~/composables/useFactures'
-import type { FactureVente } from '~/composables/useFactures'
+import type { FactureVente } from '~/types/facture/vente'
 
 const props = defineProps<{
   factureId: string
@@ -54,15 +54,15 @@ onMounted(async () => {
         <div class="grid grid-cols-2 gap-4">
           <div>
             <p class="text-sm text-gray-500">Marque</p>
-            <p class="text-sm font-medium">{{ facture.vehicle_brand }}</p>
+            <p class="text-sm font-medium truncate">{{ facture.vehicle_brand }}</p>
           </div>
           <div>
             <p class="text-sm text-gray-500">Modèle</p>
-            <p class="text-sm font-medium">{{ facture.vehicle_model }}</p>
+            <p class="text-sm font-medium truncate">{{ facture.vehicle_model }}</p>
           </div>
           <div>
             <p class="text-sm text-gray-500">Numéro de châssis</p>
-            <p class="text-sm font-medium">{{ facture.vehicle_chassis }}</p>
+            <p class="text-sm font-medium truncate">{{ facture.vehicle_chassis }}</p>
           </div>
           <div>
             <p class="text-sm text-gray-500">Kilométrage</p>
@@ -74,7 +74,7 @@ onMounted(async () => {
           </div>
           <div v-if="facture.vehicle_color">
             <p class="text-sm text-gray-500">Couleur</p>
-            <p class="text-sm font-medium">{{ facture.vehicle_color }}</p>
+            <p class="text-sm font-medium truncate">{{ facture.vehicle_color }}</p>
           </div>
           <div v-if="facture.vehicle_first_registration">
             <p class="text-sm text-gray-500">Première mise en circulation</p>
@@ -83,9 +83,18 @@ onMounted(async () => {
         </div>
       </div>
 
+      <div v-if="facture.delivered_with && facture.delivered_with.length > 0" class="border-t border-gray-200 pt-4">
+        <h4 class="text-sm font-semibold mb-3">Livré avec</h4>
+        <ul class="list-disc list-inside space-y-1">
+          <li v-for="item in facture.delivered_with" :key="item" class="text-sm text-gray-700 truncate">
+            {{ item }}
+          </li>
+        </ul>
+      </div>
+
       <div v-if="facture.additional_notes" class="border-t border-gray-200 pt-4">
         <h4 class="text-sm font-semibold mb-2">Notes additionnelles</h4>
-        <p class="text-sm text-gray-700" v-html="formatNote(facture.additional_notes)"></p>
+        <p class="text-sm text-gray-700 break-words" v-html="formatNote(facture.additional_notes)"></p>
       </div>
 
       <div class="border-t border-gray-200 pt-4">
@@ -98,12 +107,12 @@ onMounted(async () => {
             </div>
             <div v-if="facture.deposit" class="flex justify-between items-center">
               <span class="text-sm text-gray-600">Acompte</span>
-              <span class="text-sm font-medium">{{ facture.deposit.toFixed(2) }} €</span>
+              <span class="text-sm font-medium">- {{ facture.deposit.toFixed(2) }} €</span>
             </div>
             <div v-if="facture.deposit" class="border-t border-gray-200 pt-3 mt-3">
               <div class="flex justify-between items-center">
                 <span class="text-sm font-semibold">Reste à payer</span>
-                <span class="text-lg font-bold text-primary-500">{{ (facture.vehicle_price).toFixed(2) }} €</span>
+                <span class="text-lg font-bold text-primary-500">{{ (facture.vehicle_price - facture.deposit).toFixed(2) }} €</span>
               </div>
             </div>
           </div>

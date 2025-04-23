@@ -1,17 +1,18 @@
 <script setup lang="ts">
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
-import { type FactureVente } from '~/composables/useFactures'
-import FacturePreviewModal from './FacturePreviewModal.vue'
+import { type FactureVente } from '~/types/facture/vente'
+import { save } from "@tauri-apps/plugin-dialog";
+import { writeFile } from "@tauri-apps/plugin-fs";
+import { openPath } from '@tauri-apps/plugin-opener';
+
 const UButton = resolveComponent('UButton')
 const UModal = resolveComponent('UModal')
 
-withDefaults(defineProps<{
+const props = defineProps<{
   factures: FactureVente[]
   isLoading?: boolean
-}>(), {
-  isLoading: false
-})
+}>()
 
 const emit = defineEmits<{
   (e: 'show', facture: FactureVente): void
@@ -20,8 +21,6 @@ const emit = defineEmits<{
 
 const showDeleteModal = ref(false)
 const factureToDelete = ref<FactureVente | null>(null)
-const showPreviewModal = ref(false)
-const selectedFactureId = ref<string>()
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat('fr-FR', {
@@ -30,9 +29,37 @@ const formatPrice = (price: number) => {
   }).format(price)
 }
 
-const handlePreview = (facture: FactureVente) => {
-  selectedFactureId.value = facture.id
-  showPreviewModal.value = true
+const exportToCSV = async () => {
+  try {
+    const headers = ['Client', 'Marque', 'Modèle', 'Prix', 'Date de création']
+    const rows = props.factures.map((facture: FactureVente) => [
+      facture.client?.name ?? 'N/A',
+      facture.vehicle_brand,
+      facture.vehicle_model,
+      formatPrice(facture.vehicle_price),
+      formatDate(facture.date_creation)
+    ])
+
+    const csvContent = [
+      headers.join(';'),
+      ...rows.map((row: (string | number)[]) => row.join(';'))
+    ].join('\n')
+
+    const selected = await save({
+      title: 'Export des ventes',
+      defaultPath: `export_ventes_${new Date().toISOString().split('T')[0]}.csv`,
+      filters: [{ name: 'CSV', extensions: ['csv'] }]
+    })
+
+    if (selected) {
+      const encoder = new TextEncoder()
+      const fileData = encoder.encode(csvContent)
+      await writeFile(selected, fileData)
+      await openPath(selected)
+    }
+  } catch (error) {
+    console.error('Erreur lors de l\'export CSV:', error)
+  }
 }
 
 const handleDeleteClick = (facture: FactureVente) => {
@@ -169,12 +196,6 @@ const columns: TableColumn<FactureVente>[] = [
           onClick: () => emit('show', facture)
         }, () => 'Voir'),
         h(UButton, {
-          color: 'neutral',
-          variant: 'ghost',
-          icon: 'i-heroicons-printer',
-          onClick: () => handlePreview(facture)
-        }, () => 'Imprimer'),
-        h(UButton, {
           color: 'error',
           variant: 'ghost',
           icon: 'i-heroicons-trash',
@@ -227,6 +248,15 @@ const itemsPerPage = ref(10)
         placeholder="Rechercher par modèle..."
         @update:model-value="table?.tableApi?.getColumn('vehicle_model')?.setFilterValue($event)"
       />
+      <UButton
+        color="neutral"
+        variant="ghost"
+        icon="i-heroicons-arrow-down-tray"
+        class="ml-auto"
+        @click="exportToCSV"
+      >
+        Exporter en CSV
+      </UButton>
     </div>
 
     <UTable
@@ -287,10 +317,5 @@ const itemsPerPage = ref(10)
         </UCard>
       </template>
     </UModal>
-    <FacturePreviewModal
-      v-if="selectedFactureId"
-      :facture-id="selectedFactureId"
-      v-model="showPreviewModal"
-    />
   </div>
 </template> 

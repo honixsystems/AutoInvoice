@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import type { Facture, FactureVente, FactureTransport } from '~/composables/useFactures'
+import type { Facture } from '~/types/facture/common'
+import type { FactureVente } from '~/types/facture/vente'
+import type { FactureTransport } from '~/types/facture/transport'
 import type { RouteLocationNormalizedLoaded } from 'vue-router'
 import { save } from '@tauri-apps/plugin-dialog'
 import { generateFacturePath } from '~/utils/path'
+import { useTypst } from '~/composables/useTypst'
+import { useSettings } from '~/composables/useSettings'
 
 interface RouteParams {
     id: string
@@ -13,6 +17,10 @@ const router = useRouter()
 
 const factures = useFactures()
 const facture = ref<Facture | null>(null)
+
+const { generateAndSavePdf } = useTypst()
+const { companySettings } = useSettings()
+const toast = useToast()
 
 onMounted(async () => {
     const factureData = await factures.getFacture(route.params.id)
@@ -42,32 +50,27 @@ const handleEdit = () => {
     navigateTo(`/${facture.value?.type === 'vente' ? 'vente' : 'transport'}/${facture.value?.id}`)
 }
 
-const handlePrint = () => {
-    navigateTo(`/print/${facture.value?.id}`)
-}
-
-const handleDownload = async () => {
+const handleGeneratePdf = async () => {
     try {
-        if (!facture.value) {
-            throw new Error('Facture non trouvée')
+        if (!facture.value || !companySettings.value) {
+            throw new Error('Facture ou paramètres de l\'entreprise non trouvés')
         }
-        
-        const path = generateFacturePath(facture.value)
-        const filePath = await save({
-            filters: [{
-                name: 'PDF',
-                extensions: ['pdf']
-            }],
-            defaultPath: path
-        })
-        
-        if (filePath) {
-            // Naviguer vers la page de génération de PDF
-            const url = `/pdf/${facture.value.id}?path=${encodeURIComponent(filePath)}`
-            navigateTo(url)
+
+        if (facture.value.type === 'vente') {
+            const venteFacture = facture.value as FactureVente
+            const typstData = venteFacture.toTypst(companySettings.value)
+            await generateAndSavePdf(facture.value.type, typstData)
+        } else {
+            // TODO: Implémenter pour le type transport
+            throw new Error('Génération de PDF non implémentée pour les factures de transport')
         }
     } catch (error) {
         console.error('Erreur lors de la génération du PDF:', error)
+        toast.add({
+            title: 'Erreur lors de la génération du PDF',
+            description: 'Impossible de générer le PDF, merci de contacter le support',
+            color: 'error'
+        })
     }
 }
 
@@ -79,16 +82,44 @@ const getFactureMontant = (facture: Facture) => {
         return (transport.distance * transport.price_per_km) + transport.pickup_price
     }
 }
+
+const showDeleteModal = ref(false)
+
+const handleDelete = async () => {
+    if (!facture.value) return
+    showDeleteModal.value = true
+}
+
+const handleDeleteConfirm = async () => {
+    if (!facture.value) return
+    await factures.deleteFacture(facture.value.id)
+    showDeleteModal.value = false
+    handleBack()
+}
+
+const handleCancelOrRestore = async () => {
+    if (!facture.value) return
+    if (facture.value.cancelled === 1) {
+        await factures.unCancelFacture(facture.value.id)
+        facture.value.cancelled = 0
+    } else {
+        await factures.cancelFacture(facture.value.id)
+        facture.value.cancelled = 1
+    }
+}
 </script>
 
 <template>
     <div class="container mx-auto px-4 py-8">
         <div class="flex justify-between items-center mb-8">
             <div class="flex flex-col gap-1">
-                <h1 class="text-3xl font-bold text-gray-900">Facture de {{ facture?.type === 'vente' ? 'vente' :
-                    'transport' }}</h1>
+                <div class="flex items-center gap-2">
+                    <h1 class="text-3xl font-bold text-gray-900">Facture de {{ facture?.type === 'vente' ? 'vente' :
+                        'transport' }}</h1>
+                    <UBadge v-if="facture?.cancelled" color="error" variant="soft">Annulée</UBadge>
+                </div>
                 <p class="text-gray-500 text-sm">
-                    Identifiant: <span class="font-mono bg-gray-100 px-2 py-1 rounded">{{ facture?.id }}</span>
+                    Identifiant comptable: <span class="font-mono bg-gray-100 px-2 py-1 rounded">{{ facture?.id_comptable }}</span>
                 </p>
             </div>
             <div class="flex space-x-4">
@@ -121,19 +152,71 @@ const getFactureMontant = (facture: Facture) => {
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-semibold">Détails de la facture</h3>
                     <div class="flex space-x-2">
-                    <!--
-                        <UButton color="neutral" variant="ghost" icon="i-heroicons-document-arrow-down" @click="handleDownload">
+                        <UButton color="neutral" variant="ghost" icon="i-heroicons-document-arrow-down" @click="handleGeneratePdf">
                             Enregistrer en PDF
                         </UButton>
-                        -->
-                        <UButton color="neutral" variant="ghost" icon="i-heroicons-printer" @click="handlePrint">
-                            Imprimer
-                        </UButton>
+                        <UDropdownMenu :items="[
+                            [
+                                {
+                                    label: facture?.cancelled ? 'Rétablir la facture' : 'Annuler la facture',
+                                    icon: facture?.cancelled ? 'i-heroicons-arrow-path' : 'i-heroicons-x-mark',
+                                    onSelect: handleCancelOrRestore
+                                },
+                                {
+                                    label: 'Supprimer la facture',
+                                    icon: 'i-heroicons-trash',
+                                    color: 'error',
+                                    onSelect: handleDelete
+                                }
+                            ]
+                        ]">
+                            <UButton color="neutral" variant="ghost" icon="i-heroicons-ellipsis-vertical" />
+                        </UDropdownMenu>
                     </div>
                 </div>
                 <FactureVenteDetails v-if="facture?.type === 'vente'" :facture-id="facture.id" />
                 <FactureTransportDetails v-if="facture?.type === 'transport'" :facture-id="facture.id" />
             </div>
         </div>
+        <UModal v-model:open="showDeleteModal">
+            <template #content>
+                <UCard>
+                    <template #header>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-semibold">Confirmer la suppression</h3>
+                            <UButton
+                                color="neutral"
+                                variant="ghost"
+                                icon="i-heroicons-x-mark"
+                                @click="showDeleteModal = false"
+                            />
+                        </div>
+                    </template>
+
+                    <p class="text-gray-500">
+                        Êtes-vous sûr de vouloir supprimer cette facture ? Cette action est irréversible.
+                    </p>
+
+                    <template #footer>
+                        <div class="flex justify-end gap-3">
+                            <UButton
+                                color="neutral"
+                                variant="ghost"
+                                @click="showDeleteModal = false"
+                            >
+                                Annuler
+                            </UButton>
+                            <UButton
+                                color="error"
+                                variant="solid"
+                                @click="handleDeleteConfirm"
+                            >
+                                Supprimer
+                            </UButton>
+                        </div>
+                    </template>
+                </UCard>
+            </template>
+        </UModal>
     </div>
 </template>

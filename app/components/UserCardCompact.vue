@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useClients } from '~/composables/useClients'
-import type { Client } from '~/composables/useClients'
+import type { Client } from '~/types/client'
 
 const props = defineProps<{
   clientId: string

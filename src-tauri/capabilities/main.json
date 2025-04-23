@@ -54,6 +54,9 @@
         },
         {
           "path": "$APPDATA/logo.png"
+        },
+        {
+          "path": "$RESOURCE/*"
         }
       ]
     },
@@ -64,6 +67,15 @@
     "dialog:allow-save",
     "sql:default",
     "sql:allow-execute",
-    "dialog:default"
+    "dialog:default",
+    "opener:default",
+    {
+      "identifier": "opener:allow-open-path",
+      "allow": [
+        {
+          "path": "/**/*"
+        }
+      ]
+    }
   ]
 }

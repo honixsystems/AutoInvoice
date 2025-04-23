@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { useClients } from '~/composables/useClients'
 import { useFactures } from '~/composables/useFactures'
-import type { Client } from '~/composables/useClients'
-import type { Facture } from '~/composables/useFactures'
+import type { Client } from '~/types/client'
+import type { Facture } from '~/types/facture/common'
 import ClientDisplay from '~/components/ClientDisplay.vue'
 import ClientFactures from '~/components/ClientFactures.vue'
 

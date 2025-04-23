@@ -45,6 +45,14 @@
                 <USwitch v-model="companyState.displayVAT" />
               </UFormField>
             </div>
+
+            <UFormField label="IBAN" name="iban">
+              <UInput v-model="companyState.iban" placeholder="FR7630001007941234567890189" class="w-full" />
+            </UFormField>
+
+            <UFormField label="BIC" name="bic">
+              <UInput v-model="companyState.bic" placeholder="BNPAFRPP" class="w-full" />
+            </UFormField>
           </UForm>
         </div>
       </template>
@@ -126,9 +134,11 @@ import type { FormSubmitEvent } from '@nuxt/ui'
 import type { StepperItem } from '@nuxt/ui'
 import { Store } from '@tauri-apps/plugin-store'
 import { BaseDirectory, writeFile } from '@tauri-apps/plugin-fs'
+import { useSettings } from '~/composables/useSettings'
 
 const router = useRouter()
 const toast = useToast()
+const { loadSettings } = useSettings()
 
 const companySchema = z.object({
   companyName: z.string().min(1, 'Le nom de l\'entreprise est requis'),
@@ -137,7 +147,9 @@ const companySchema = z.object({
   vatNumber: z.string().min(1, 'Le numéro de TVA est requis'),
   vatRate: z.number().min(0).max(100).step(0.1, 'Le taux de TVA doit être entre 0 et 100'),
   displayVAT: z.boolean(),
-  logoUrl: z.string().optional()
+  logoUrl: z.string().optional(),
+  iban: z.string().regex(/^[A-Z]{2}[0-9A-Z]+$/, 'Format IBAN invalide'),
+  bic: z.string().regex(/^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/, 'Format BIC invalide')
 })
 
 const appSchema = z.object({
@@ -156,7 +168,9 @@ const companyState = reactive<Partial<CompanySchema>>({
   vatNumber: undefined,
   vatRate: 20,
   displayVAT: true,
-  logoUrl: undefined
+  logoUrl: undefined,
+  iban: undefined,
+  bic: undefined
 })
 
 const appState = reactive<Partial<AppSchema>>({
@@ -189,7 +203,7 @@ const steps: StepperItem[] = [
   }
 ]
 
-const features = [
+const features: { name: keyof AppSchema; label: string; description: string; icon: string; color: 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' }[] = [
   {
     name: 'enableVente',
     label: 'Facturation de vente',
@@ -256,6 +270,9 @@ const finishSetup = async () => {
     const appStore = await Store.load('app-settings.json')
     await appStore.set('settings', appState)
     await appStore.save()
+
+    // Recharger les paramètres
+    await loadSettings()
 
     // Rediriger vers la page de succès
     router.push('/setup-success')

@@ -125,6 +125,36 @@ pub fn get_migrations() -> Vec<Migration> {
                 DROP TABLE factures_temp;
             ",
             kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 6,
+            description: "add_delivered_with_to_factures_vente",
+            sql: "
+                -- Ajout du champ delivered_with à la table factures_vente
+                ALTER TABLE factures_vente ADD COLUMN delivered_with TEXT DEFAULT '[]';
+            ",
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 7,
+            description: "add_id_comptable_to_factures",
+            sql: "
+                -- Ajout du champ id_comptable à la table factures
+                ALTER TABLE factures ADD COLUMN id_comptable TEXT;
+                
+                -- Création d'un index pour optimiser les recherches par id_comptable
+                CREATE INDEX IF NOT EXISTS idx_factures_id_comptable ON factures(id_comptable);
+            ",
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 8,
+            description: "add_cancelled_to_factures",
+            sql: "
+                -- Ajout du champ cancelled à la table factures
+                ALTER TABLE factures ADD COLUMN cancelled BOOLEAN DEFAULT FALSE;
+            ",
+            kind: MigrationKind::Up,
         }
     ]
 }
