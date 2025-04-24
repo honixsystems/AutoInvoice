@@ -1,7 +1,6 @@
 use serde_json::Value;
 use std::fs;
 use std::fs::read;
-use std::path::PathBuf;
 use tauri::Manager;
 use typst::ecow::EcoVec;
 use typst::foundations::{Array, Dict, IntoValue, Str};
@@ -17,7 +16,11 @@ pub fn generate_pdf(
 ) -> Result<Vec<u8>, String> {
     let template_content = load_template(&app, template_name)?;
     let resource_dir = app.path().resource_dir().unwrap();
-    let template_id = format!("{}/resources/typst/templates/{}.typ", resource_dir.display(), template_name);
+    let template_id = format!(
+        "{}/resources/typst/templates/{}.typ",
+        resource_dir.display(),
+        template_name
+    );
     let font_regular: Vec<u8> = read(
         app.path()
             .resource_dir()
@@ -39,9 +42,19 @@ pub fn generate_pdf(
     let builder = TypstEngine::builder();
     let builder = builder.fonts([font_regular, font_semibold]);
     let builder = builder.add_file_resolver(
-        FileSystemResolver::new(app.path().resource_dir().unwrap().join("resources/typst/templates"))
-            .local_package_root(app.path().resource_dir().unwrap().join("resources/typst/packages"))
-            .into_cached(),
+        FileSystemResolver::new(
+            app.path()
+                .resource_dir()
+                .unwrap()
+                .join("resources/typst/templates"),
+        )
+        .local_package_root(
+            app.path()
+                .resource_dir()
+                .unwrap()
+                .join("resources/typst/packages"),
+        )
+        .into_cached(),
     );
     let builder = builder
         .with_static_source_file_resolver([(template_id.as_str(), template_content.as_str())]);

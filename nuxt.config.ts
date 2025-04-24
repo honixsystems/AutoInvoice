@@ -27,6 +27,10 @@ export default defineNuxtConfig({
 	css: [
 		"@/assets/css/main.css"
 	],
+	plugins: [
+		"~/plugins/setup.client.ts",
+		"~/plugins/license.client.ts"
+	],
 	icon: {
 		customCollections: [
 			{

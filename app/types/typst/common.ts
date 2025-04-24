@@ -8,6 +8,7 @@ export interface TemplateConfig {
     vatRate: number;
     cancellation: boolean;
     footerText: string;
+    cgv: string;
 }
 
 export interface TemplateBiller {

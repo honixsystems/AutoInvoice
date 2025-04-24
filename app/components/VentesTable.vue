@@ -5,7 +5,7 @@ import { type FactureVente } from '~/types/facture/vente'
 import { save } from "@tauri-apps/plugin-dialog";
 import { writeFile } from "@tauri-apps/plugin-fs";
 import { openPath } from '@tauri-apps/plugin-opener';
-
+import { exportToCsv } from '~/utils/csv';
 const UButton = resolveComponent('UButton')
 const UModal = resolveComponent('UModal')
 
@@ -31,20 +31,16 @@ const formatPrice = (price: number) => {
 
 const exportToCSV = async () => {
   try {
-    const headers = ['Client', 'Marque', 'Modèle', 'Prix', 'Date de création']
-    const rows = props.factures.map((facture: FactureVente) => [
-      facture.client?.name ?? 'N/A',
-      facture.vehicle_brand,
-      facture.vehicle_model,
-      formatPrice(facture.vehicle_price),
-      formatDate(facture.date_creation)
-    ])
-
-    const csvContent = [
-      headers.join(';'),
-      ...rows.map((row: (string | number)[]) => row.join(';'))
-    ].join('\n')
-
+    const arr = await exportToCsv(
+      props.factures.map(facture => ({
+        client: facture.client?.name ?? 'N/A',
+        marque: facture.vehicle_brand,
+        modele: facture.vehicle_model,
+        prix: formatPrice(facture.vehicle_price),
+        date: formatDate(facture.date_creation)
+      })),
+      ['Client', 'Marque', 'Modèle', 'Prix', 'Date de création']
+    )
     const selected = await save({
       title: 'Export des ventes',
       defaultPath: `export_ventes_${new Date().toISOString().split('T')[0]}.csv`,
@@ -52,9 +48,7 @@ const exportToCSV = async () => {
     })
 
     if (selected) {
-      const encoder = new TextEncoder()
-      const fileData = encoder.encode(csvContent)
-      await writeFile(selected, fileData)
+      await writeFile(selected, arr)
       await openPath(selected)
     }
   } catch (error) {

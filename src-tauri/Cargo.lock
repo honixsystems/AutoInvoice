@@ -320,6 +320,7 @@ name = "autoinvoice"
 version = "1.4.0"
 dependencies = [
  "derive_typst_intoval",
+ "mac_address",
  "serde",
  "serde_json",
  "tauri",
@@ -2992,6 +2993,16 @@ dependencies = [
  "objc-foundation",
  "objc_id",
  "time",
+]
+
+[[package]]
+name = "mac_address"
+version = "1.1.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c0aeb26bf5e836cc1c341c8106051b573f1766dfa05aa87f0b98be5e51b02303"
+dependencies = [
+ "nix",
+ "winapi",
 ]
 
 [[package]]

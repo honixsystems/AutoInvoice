@@ -32,27 +32,17 @@ const formatPrice = (price: number) => {
 
 const exportToCSV = async () => {
   try {
-    const headers = ['Client', 'Date de transport', 'Trajet', 'Distance (km)', 'Total']
-    const rows = props.factures.map((facture: FactureTransport) => {
-      const distance = Number(facture.distance) || 0
-      const pricePerKm = Number(facture.price_per_km) || 0
-      const pickupPrice = Number(facture.pickup_price) || 0
-      const total = (distance * pricePerKm) + pickupPrice
-
-      return [
-        facture.client?.name ?? 'N/A',
-        formatDate(facture.transport_date),
-        `${facture.departure_location} → ${facture.arrival_location}`,
-        distance,
-        formatPrice(total)
-      ]
-    })
-
-    const csvContent = [
-      headers.join(';'),
-      ...rows.map((row: (string | number)[]) => row.join(';'))
-    ].join('\n')
-
+    const arr = await exportToCsv(
+      props.factures.map(facture => ({
+        client: facture.client?.name ?? 'N/A',
+        date: formatDate(facture.transport_date),
+        route: `${facture.departure_location} -> ${facture.arrival_location}`,
+        distance: facture.distance,
+        pickup_price: formatPrice(facture.pickup_price),
+        price_per_km: formatPrice(facture.price_per_km),
+        total: formatPrice(facture.pickup_price + (facture.distance * facture.price_per_km))
+      })),
+      ['Client', 'Date de transport', 'Trajet', 'Distance (km)', 'Prix de prise en charge', 'Prix par km', 'Total'])
     const selected = await save({
       title: 'Export des transports',
       defaultPath: `export_transports_${new Date().toISOString().split('T')[0]}.csv`,
@@ -60,9 +50,7 @@ const exportToCSV = async () => {
     })
 
     if (selected) {
-      const encoder = new TextEncoder()
-      const fileData = encoder.encode(csvContent)
-      await writeFile(selected, fileData)
+      await writeFile(selected, arr)
       await openPath(selected)
     }
   } catch (error) {

@@ -2,6 +2,7 @@
 use tauri::menu::{Menu, MenuItem};
 mod migrations;
 mod typst;
+mod mac;
 
 pub fn run() {
     tauri::Builder::default()
@@ -25,7 +26,7 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(tauri::generate_handler![typst::generate_pdf])
+        .invoke_handler(tauri::generate_handler![typst::generate_pdf, mac::get_mac_address])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

@@ -1,6 +1,6 @@
 [package]
 name = "autoinvoice"
-version = "1.4.0"
+version = "1.4.1"
 description = "Invoicing tool"
 authors = [ "Gwenaël HUBLER" ]
 license = "MIT"
@@ -35,6 +35,7 @@ derive_typst_intoval = "0.3.0"
 typst-pdf = "0.13.0"
 typst-library = "0.13.0"
 tauri-plugin-opener = "2"
+mac_address = "1.1.8"
 
 [dependencies.tauri]
 version = "2.2.5"

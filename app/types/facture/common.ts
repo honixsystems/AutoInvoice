@@ -51,7 +51,8 @@ export class FactureBase {
                 displayVat: companySettings.displayVAT,
                 vatRate: companySettings.vatRate,
                 cancellation: this.cancelled === 1,
-                footerText: companySettings.footerNote || ''
+                footerText: companySettings.footerNote || '',
+                cgv: companySettings.cgv || ''
             },
             biller: {
                 logo: companySettings.logoData || new Uint8Array(),

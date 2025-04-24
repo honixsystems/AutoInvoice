@@ -95,6 +95,7 @@
       bic: "BIC",
       qrCodeText: "You can scan the QR code below with your bank app to make the payment.",
       notes: "Additional notes",
+      cgv: "General Terms and Conditions",
     ),
     fr: (
       id: "fr",
@@ -148,6 +149,7 @@
       bic: "BIC",
       qrCodeText: "Vous pouvez scanner le QR code ci-dessous avec votre application de banque pour effectuer le paiement.",
       notes: "Notes additionnelles",
+      cgv: "Conditions générales de vente",
     ),
     de: (
       id: "de",
@@ -201,6 +203,7 @@
       bic: "BIC",
       qrCodeText: "Sie können den QR-Code unten scannen, um den Betrag zu zahlen.",
       notes: "Zusätzliche Notizen",
+      cgv: "Allgemeine Geschäftsbedingungen",
     ),
   )
 
@@ -288,10 +291,14 @@
     #grid(
         columns: (1fr, 1fr, 1fr),
         align: (left, center, right),
-        [#text(size: 1em, fill: textSecondary)[#config.footerText]], [], [#counter(page).display(
-      "1/1",
-        both: true,
-      )],
+        if config.footerText != none and config.footerText != "" {
+          [#text(size: 1em, fill: textSecondary)[#config.footerText]]
+        },
+        [],
+        [#counter(page).display(
+          "1/1",
+            both: true,
+        )],
     )
   ]
   )
@@ -503,6 +510,14 @@
   }
   else {
     v(1em)
+  }
+
+  if config.cgv != none and config.cgv != "" {
+    pagebreak()
+    v(1em)
+    text(size: 1em, fill: textSecondary)[*#t.cgv*]
+    v(1em)
+    text(size: 0.5em, fill: textSecondary)[*#config.cgv*]
   }
   doc
 }

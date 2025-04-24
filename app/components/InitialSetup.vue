@@ -10,48 +10,132 @@
         <div class="space-y-6">
           <div class="flex flex-col">
             <h3 class="text-lg font-semibold text-gray-900">Identité de l'entreprise</h3>
-            <p class="text-sm text-gray-500">Configurez les informations de base de votre entreprise</p>
+            <p class="text-sm text-gray-500">Configurez les informations légales et de contact de votre entreprise</p>
           </div>
 
-          <UForm ref="companyFormRef" :schema="companySchema" :state="companyState" class="space-y-4">
-            <UFormField label="Logo de l'entreprise" class="md:col-span-2">
-              <div class="flex items-center gap-4">
-                <img v-if="logoPreview" :src="logoPreview" alt="Logo actuel" class="w-32 h-32 object-contain">
-                <UInput type="file" accept="image/*" @change="handleLogoChange" class="flex-1" />
-              </div>
-            </UFormField>
-
-            <UFormField label="Raison sociale" name="companyName">
-              <UInput v-model="companyState.companyName" placeholder="Nom de votre entreprise" class="w-full" />
-            </UFormField>
-
-            <UFormField label="Numéro de téléphone" name="phoneNumber">
-              <UInput v-model="companyState.phoneNumber" type="tel" placeholder="+33 1 23 45 67 89" class="w-full" />
-            </UFormField>
-
-            <UFormField label="Adresse" name="address">
-              <UTextarea v-model="companyState.address" placeholder="Adresse complète" :rows="3" class="w-full" />
-            </UFormField>
-
-            <UFormField label="Numéro de TVA" name="vatNumber">
-              <UInput v-model="companyState.vatNumber" placeholder="FR12345678900" class="w-full" />
-            </UFormField>
-
-            <div class="flex items-center gap-4">
-              <UFormField label="Taux de TVA (%)" name="vatRate" class="w-full">
-                <UInput v-model="companyState.vatRate" type="number" min="0" max="100" step="0.1" class="w-full" />
-              </UFormField>
-              <UFormField label="Afficher la TVA" name="displayVAT" class="w-full">
-                <USwitch v-model="companyState.displayVAT" />
+          <div class="flex flex-col md:flex-row gap-8">
+            <!-- Logo à gauche -->
+            <div class="w-full md:w-48 flex-shrink-0">
+              <UFormField label="Logo" class="w-full">
+                <LogoUploader 
+                  :initial-logo-data="logoData"
+                  @update:logo-data="updateLogoData"
+                />
               </UFormField>
             </div>
 
+            <!-- Informations à droite -->
+            <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <UFormField label="Raison sociale" name="companyName" class="md:col-span-2">
+                <UInput v-model="companyState.companyName" placeholder="Nom de votre entreprise" class="w-full" />
+              </UFormField>
+
+              <UFormField label="Numéro de TVA" name="vatNumber">
+                <UInput v-model="companyState.vatNumber" placeholder="FR12345678900" class="w-full" />
+              </UFormField>
+
+              <UFormField label="Numéro de téléphone" name="phoneNumber">
+                <UInput v-model="companyState.phoneNumber" type="tel" placeholder="+33 1 23 45 67 89" class="w-full" />
+              </UFormField>
+
+              <UFormField label="Adresse" name="address" class="md:col-span-2">
+                <UTextarea v-model="companyState.address" placeholder="Adresse complète" :rows="3" class="w-full" />
+              </UFormField>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section Paramètres de facturation -->
+        <div class="space-y-6 mt-12">
+          <div class="flex flex-col">
+            <h3 class="text-lg font-semibold text-gray-900">Paramètres de facturation</h3>
+            <p class="text-sm text-gray-500">Configurez les paramètres de paiement et d'affichage des factures</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <UFormField label="IBAN" name="iban">
               <UInput v-model="companyState.iban" placeholder="FR7630001007941234567890189" class="w-full" />
             </UFormField>
 
             <UFormField label="BIC" name="bic">
               <UInput v-model="companyState.bic" placeholder="BNPAFRPP" class="w-full" />
+            </UFormField>
+
+            <UFormField label="Note de bas de page" name="footerNote" class="md:col-span-2">
+              <UTextarea v-model="companyState.footerNote" placeholder="Texte qui apparaîtra en bas de vos factures" :rows="2" class="w-full" />
+            </UFormField>
+
+            <UFormField label="Conditions générales de vente" name="cgv" class="md:col-span-2">
+              <UTextarea v-model="companyState.cgv" placeholder="Vos conditions générales de vente" :rows="8" class="w-full" />
+            </UFormField>
+          </div>
+        </div>
+
+        <!-- Section Apparence -->
+        <div class="space-y-6 mt-12">
+          <div class="flex flex-col">
+            <h3 class="text-lg font-semibold text-gray-900">Apparence</h3>
+            <p class="text-sm text-gray-500">Personnalisez l'apparence de vos factures</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <UPopover>
+              <UFormField label="Couleur primaire" name="primaryColor" class="md:col-span-2">
+                <UButton label="Choisir une couleur" color="neutral" variant="outline" class="w-full">
+                  <template #leading>
+                    <span :style="{ backgroundColor: companyState.primaryColor }" class="size-3 rounded-full" />
+                  </template>
+                </UButton>
+              </UFormField>
+              <template #content>
+                <div class="space-y-4 p-2">
+                  <UColorPicker v-model="companyState.primaryColor" />
+                  <UInput
+                    v-model="companyState.primaryColor"
+                    placeholder="#000000"
+                    pattern="^#[0-9A-Fa-f]{6}$"
+                    class="w-full"
+                  />
+                </div>
+              </template>
+            </UPopover>
+          </div>
+        </div>
+
+        <!-- Section TVA -->
+        <div class="space-y-6 mt-12">
+          <div class="flex flex-col">
+            <h3 class="text-lg font-semibold text-gray-900">Paramètres TVA</h3>
+            <p class="text-sm text-gray-500">Configurez l'affichage et le calcul de la TVA</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <UFormField label="Activer la TVA" name="displayVAT" class="md:col-span-2">
+              <USwitch v-model="companyState.displayVAT" />
+            </UFormField>
+
+            <UFormField 
+              v-if="companyState.displayVAT"
+              label="Taux de TVA (%)" 
+              name="vatRate"
+              class="md:col-span-2"
+            >
+              <UInput v-model="companyState.vatRate" type="number" min="0" max="100" step="0.1" class="w-full" />
+            </UFormField>
+          </div>
+        </div>
+      </template>
+
+      <template #license>
+        <div class="space-y-6">
+          <div class="flex flex-col">
+            <h3 class="text-lg font-semibold text-gray-900">Licence</h3>
+            <p class="text-sm text-gray-500">Entrez votre clé de licence pour activer l'application</p>
+          </div>
+
+          <UForm ref="licenseFormRef" :schema="licenseSchema" :state="licenseState" class="space-y-4">
+            <UFormField label="Clé de licence" name="licenseKey">
+              <UInput v-model="licenseState.licenseKey" placeholder="Entrez votre clé de licence" class="w-full" />
             </UFormField>
           </UForm>
         </div>
@@ -109,7 +193,7 @@
       <UButton
         size="lg"
         class="w-full flex justify-center items-center"
-        v-if="currentStep < 2"
+        v-if="currentStep < 3"
         color="primary"
         @click="nextStep"
       >
@@ -118,7 +202,7 @@
       <UButton
         size="lg"
         class="w-full flex justify-center items-center"
-        v-if="currentStep === 2"
+        v-if="currentStep === 3"
         color="primary"
         @click="finishSetup"
       >
@@ -135,10 +219,15 @@ import type { StepperItem } from '@nuxt/ui'
 import { Store } from '@tauri-apps/plugin-store'
 import { BaseDirectory, writeFile } from '@tauri-apps/plugin-fs'
 import { useSettings } from '~/composables/useSettings'
+import { setLicenseKey } from '~/utils/license'
+import LogoUploader from './LogoUploader.vue'
+import type { CompanySettings, AppSettings } from '~/types/settings'
 
 const router = useRouter()
 const toast = useToast()
-const { loadSettings } = useSettings()
+const { companySettings, appSettings, loadSettings } = useSettings()
+
+const logoData = computed(() => companySettings.value?.logoData)
 
 const companySchema = z.object({
   companyName: z.string().min(1, 'Le nom de l\'entreprise est requis'),
@@ -149,40 +238,60 @@ const companySchema = z.object({
   displayVAT: z.boolean(),
   logoUrl: z.string().optional(),
   iban: z.string().regex(/^[A-Z]{2}[0-9A-Z]+$/, 'Format IBAN invalide'),
-  bic: z.string().regex(/^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/, 'Format BIC invalide')
+  bic: z.string().regex(/^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/, 'Format BIC invalide'),
+  footerNote: z.string().optional(),
+  cgv: z.string().optional(),
+  primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Couleur hexadécimale invalide')
 })
 
 const appSchema = z.object({
-  autoUpdate: z.boolean(),
   enableVente: z.boolean(),
   enableTransport: z.boolean()
 })
 
-type CompanySchema = z.output<typeof companySchema>
-type AppSchema = z.output<typeof appSchema>
-
-const companyState = reactive<Partial<CompanySchema>>({
-  companyName: undefined,
-  phoneNumber: undefined,
-  address: undefined,
-  vatNumber: undefined,
-  vatRate: 20,
-  displayVAT: true,
-  logoUrl: undefined,
-  iban: undefined,
-  bic: undefined
+const licenseSchema = z.object({
+  licenseKey: z.string().min(1, 'La clé de licence est requise')
 })
 
-const appState = reactive<Partial<AppSchema>>({
-  autoUpdate: true,
+type CompanyFormSchema = z.output<typeof companySchema>
+type AppFormSchema = z.output<typeof appSchema>
+type LicenseFormSchema = z.output<typeof licenseSchema>
+
+const companyState = reactive<Partial<CompanySettings>>({
+  companyName: '',
+  phoneNumber: '',
+  address: '',
+  vatNumber: '',
+  vatRate: 20,
+  displayVAT: false,
+  logoUrl: undefined,
+  iban: '',
+  bic: '',
+  footerNote: '',
+  cgv: '',
+  primaryColor: '#000000'
+})
+
+const appState = reactive<Partial<AppSettings>>({
   enableVente: true,
   enableTransport: true
 })
 
+const licenseState = reactive<Partial<LicenseFormSchema>>({
+  licenseKey: undefined
+})
+
 const currentStep = ref(0)
 const companyFormRef = ref()
+const licenseFormRef = ref()
 
 const steps: StepperItem[] = [
+  {
+    slot: 'license',
+    title: 'Licence',
+    description: 'Activation de la licence',
+    icon: 'i-heroicons-key'
+  },
   {
     slot: 'company',
     title: 'Entreprise',
@@ -192,7 +301,7 @@ const steps: StepperItem[] = [
   {
     slot: 'features',
     title: 'Fonctionnalités',
-    description: 'Configuration des fonctionnalités',
+    description: 'Ce que vous voulez activer',
     icon: 'i-heroicons-cog-6-tooth'
   },
   {
@@ -203,7 +312,7 @@ const steps: StepperItem[] = [
   }
 ]
 
-const features: { name: keyof AppSchema; label: string; description: string; icon: string; color: 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' }[] = [
+const features: { name: keyof AppSettings; label: string; description: string; icon: string; color: 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' }[] = [
   {
     name: 'enableVente',
     label: 'Facturation de vente',
@@ -220,14 +329,9 @@ const features: { name: keyof AppSchema; label: string; description: string; ico
   }
 ]
 
-const logoPreview = ref<string | null>(null)
-const logoFile = ref<File | null>(null)
-
-async function handleLogoChange(event: Event) {
-  const input = event.target as HTMLInputElement
-  if (input.files && input.files[0]) {
-    logoFile.value = input.files[0]
-    logoPreview.value = URL.createObjectURL(input.files[0])
+const updateLogoData = (data: Uint8Array) => {
+  if (companySettings?.value) {
+    companySettings.value.logoData = data
   }
 }
 
@@ -235,12 +339,25 @@ const nextStep = async () => {
   let isValid = true
   
   if (currentStep.value === 0) {
+    isValid = await licenseFormRef.value?.validate()
+    if (isValid && licenseState.licenseKey) {
+      const result = await setLicenseKey(licenseState.licenseKey)
+      if (!result.valid) {
+        toast.add({
+          title: 'Erreur de licence',
+          description: result.message,
+          color: 'error'
+        })
+        return
+      }
+    }
+  } else if (currentStep.value === 1) {
     isValid = await companyFormRef.value?.validate()
   }
 
   if (!isValid) return
 
-  if (currentStep.value === 1) {
+  if (currentStep.value === 2) {
     await finishSetup()
     return
   }
@@ -259,11 +376,9 @@ const finishSetup = async () => {
     await companyStore.set('settings', companyState)
     await companyStore.save()
 
-    // Sauvegarder le logo si un nouveau fichier a été sélectionné
-    if (logoFile.value) {
-      const arrayBuffer = await logoFile.value.arrayBuffer()
-      const uint8Array = new Uint8Array(arrayBuffer)
-      await writeFile('logo.png', uint8Array, { baseDir: BaseDirectory.AppLocalData })
+    // Sauvegarder le logo si des données sont présentes
+    if (companySettings.value?.logoData) {
+      await writeFile('logo.png', companySettings.value.logoData, { baseDir: BaseDirectory.AppLocalData })
     }
 
     // Sauvegarder les paramètres de l'application
@@ -285,4 +400,11 @@ const finishSetup = async () => {
     })
   }
 }
+
+onMounted(async () => {
+  await loadSettings()
+  if (companySettings?.value) {
+    Object.assign(companyState, companySettings.value)
+  }
+})
 </script> 

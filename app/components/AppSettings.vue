@@ -2,9 +2,9 @@
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
 import { Store } from '@tauri-apps/plugin-store'
+import { getLicenseKey, validateStoredLicense, deactivateStoredLicense } from '~/utils/license'
 
 const schema = z.object({
-  autoUpdate: z.boolean(),
   enableVente: z.boolean(),
   enableTransport: z.boolean()
 })
@@ -12,10 +12,18 @@ const schema = z.object({
 type Schema = z.output<typeof schema>
 
 const state = reactive<Partial<Schema>>({
-  autoUpdate: true,
   enableVente: true,
   enableTransport: true
 })
+
+const licenseState = reactive({
+  key: '',
+  isValid: false,
+  loading: false,
+  checking: false
+})
+
+const isDeactivateModalOpen = ref(false)
 
 type Feature = {
   name: keyof Schema
@@ -55,8 +63,19 @@ onMounted(async () => {
     if (savedSettings) {
       Object.assign(state, savedSettings)
     }
+
+    // Charger les informations de la licence
+    const licenseKey = await getLicenseKey()
+    if (licenseKey) {
+      licenseState.key = licenseKey
+      licenseState.checking = true
+      const validation = await validateStoredLicense()
+      licenseState.isValid = validation.valid
+    }
   } catch (error) {
     console.error('Erreur lors du chargement des paramètres:', error)
+  } finally {
+    licenseState.checking = false
   }
 })
 
@@ -78,22 +97,43 @@ watch(state, async (newState) => {
     })
   }
 }, { deep: true })
+
+const handleDeactivateLicense = async () => {
+  try {
+    licenseState.loading = true
+    const result = await deactivateStoredLicense()
+    if (result.valid) {
+      licenseState.key = ''
+      licenseState.isValid = false
+      toast.add({
+        title: 'Succès',
+        description: 'La licence a été désactivée avec succès.',
+        color: 'success'
+      })
+      navigateTo('/setup')
+    } else {
+      toast.add({
+        title: 'Erreur',
+        description: result.message,
+        color: 'error'
+      })
+    }
+  } catch (error) {
+    toast.add({
+      title: 'Erreur',
+      description: 'Une erreur est survenue lors de la désactivation de la licence.',
+      color: 'error'
+    })
+  } finally {
+    licenseState.loading = false
+    isDeactivateModalOpen.value = false
+  }
+}
 </script>
 
 <template>
   <UForm :schema="schema" :state="state" class="space-y-16">
     <div class="grid grid-cols-1 gap-12">
-      <div class="space-y-6">
-        <div class="flex flex-col">
-          <h3 class="text-lg font-semibold text-gray-900">Mises à jour</h3>
-          <p class="text-sm text-gray-500">Configurez les paramètres de mise à jour de l'application</p>
-        </div>
-
-        <UFormField label="Mises à jour automatiques" name="autoUpdate">
-          <USwitch v-model="state.autoUpdate" />
-        </UFormField>
-      </div>
-
       <div class="space-y-6">
         <div class="flex flex-col">
           <h3 class="text-lg font-semibold text-gray-900">Fonctionnalités</h3>
@@ -128,6 +168,80 @@ watch(state, async (newState) => {
           </UCard>
         </div>
       </div>
+
+      <!-- Section Licence -->
+      <div class="space-y-6">
+        <div class="flex flex-col">
+          <h3 class="text-lg font-semibold text-gray-900">Licence</h3>
+          <p class="text-sm text-gray-500">Gérez votre licence d'utilisation</p>
+        </div>
+
+        <UCard>
+          <div class="flex items-center justify-between">
+            <div>
+              <h4 class="font-medium text-gray-900">Licence actuelle</h4>
+              <p class="mt-1 text-sm text-gray-500">
+                {{ licenseState.key ? `${licenseState.key.substring(0, 10)}...` : 'Aucune licence active' }}
+              </p>
+              <p class="mt-1 text-sm" :class="licenseState.isValid ? 'text-green-500' : 'text-red-500'">
+                <template v-if="licenseState.checking">
+                  <div class="flex items-center gap-2 text-gray-500">
+                    <UIcon name="i-heroicons-arrow-path" class="w-4 h-4 animate-spin" />
+                    Vérification en cours...
+                  </div>
+                </template>
+                <template v-else>
+                  <div class="flex items-center gap-2">
+                    <UIcon :name="licenseState.isValid ? 'i-heroicons-check-circle' : 'i-heroicons-x-circle'" class="w-4 h-4" :class="licenseState.isValid ? 'text-green-500' : 'text-red-500'" />
+                    {{ licenseState.isValid ? 'Licence valide' : 'Licence invalide' }}
+                  </div>
+                </template>
+              </p>
+            </div>
+            <UButton
+              v-if="licenseState.key"
+              color="error"
+              variant="soft"
+              :loading="licenseState.loading"
+              @click="isDeactivateModalOpen = true"
+            >
+              Désactiver la licence
+            </UButton>
+          </div>
+        </UCard>
+      </div>
     </div>
   </UForm>
+
+  <!-- Modal de confirmation de désactivation -->
+  <UModal
+    v-model:open="isDeactivateModalOpen"
+  >
+    <template #title>
+      <h4 class="font-medium text-gray-900">Désactivation de la licence</h4>
+    </template>
+    <template #body>
+      <p class="text-gray-700">
+        Êtes-vous sûr de vouloir désactiver votre licence ? Vous devrez entrer une nouvelle licence pour continuer à utiliser le logiciel.
+      </p>
+      <p class="text-gray-400 text-sm mt-4">
+        Note: Si vous désactivez votre licence, vous pourrez l'utiliser sur un autre appareil.
+      </p>
+    </template>
+    <template #footer>
+      <div class="flex gap-2">
+        <UButton
+          color="neutral"
+          label="Annuler"
+          @click="isDeactivateModalOpen = false"
+        />
+        <UButton
+          color="error"
+          label="Désactiver"
+          :loading="licenseState.loading"
+          @click="handleDeactivateLicense"
+        />
+      </div>
+    </template>
+  </UModal>
 </template>

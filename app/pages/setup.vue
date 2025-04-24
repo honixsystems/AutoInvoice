@@ -25,6 +25,7 @@ import type { CompanySettings, AppSettings } from '~/types/settings'
 const isConfigured = ref(false)
 
 onMounted(async () => {
+  /*
   try {
     // Vérifier si les paramètres de l'entreprise existent
     const companyStore = await Store.load('company-settings.json')
@@ -41,5 +42,6 @@ onMounted(async () => {
     // En cas d'erreur, on considère que l'application n'est pas configurée
     isConfigured.value = false
   }
+  */
 })
 </script> 

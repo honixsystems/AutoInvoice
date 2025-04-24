@@ -11,10 +11,10 @@ export interface CompanySettings {
     logoData?: Uint8Array
     iban: string
     bic: string
+    cgv?: string
 }
 
 export interface AppSettings {
-    autoUpdate: boolean
     enableVente: boolean
     enableTransport: boolean
 }
