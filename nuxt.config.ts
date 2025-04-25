@@ -29,7 +29,7 @@ export default defineNuxtConfig({
 	],
 	plugins: [
 		"~/plugins/setup.client.ts",
-		"~/plugins/license.client.ts"
+		"~/plugins/license.ts"
 	],
 	icon: {
 		customCollections: [
@@ -97,11 +97,6 @@ export default defineNuxtConfig({
 	},
 	devtools: {
 		enabled: false
-	},
-	nitro: {
-		experimental: {
-			wasm: true
-		}
 	},
 	compatibilityDate: "2025-03-01"
 });

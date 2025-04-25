@@ -19,9 +19,6 @@
 </template>
 
 <script setup lang="ts">
-import { Store } from '@tauri-apps/plugin-store'
-import type { CompanySettings, AppSettings } from '~/types/settings'
-
 const isConfigured = ref(false)
 
 onMounted(async () => {

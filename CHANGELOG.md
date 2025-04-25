@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.2] - 2025-04-25
+- Résolution du problème de CORS avec le serveur de license
+- Résolution du problème de la configuration initiale
+
+## [1.4.1] - 2025-04-24
+- Ajout du système de license dans le logiciel
+- Retravail de l'interface de paramètres
+- Ajout de la possibilité de retirer la license
+
 ## [1.4.0] - 2025-04-23
 - Amélioration de la génération des factures (Typst)
 - Ajout du template de facture de vente

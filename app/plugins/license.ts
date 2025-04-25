@@ -16,6 +16,14 @@ export default defineNuxtPlugin(async (nuxtApp) => {
     }
   }
 
+  addRouteMiddleware('license', (to, from) => {
+    const isLicenseValid = useState('isLicenseValid');
+
+    if (!isLicenseValid.value && to.path !== '/setup') {
+      return navigateTo('/setup');
+    }
+  }, { global: true })
+
   return {
     provide: {
       license: {
