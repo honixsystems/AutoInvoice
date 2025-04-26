@@ -61,8 +61,9 @@ const handleGeneratePdf = async () => {
             const typstData = venteFacture.toTypst(companySettings.value)
             await generateAndSavePdf(facture.value.type, typstData)
         } else {
-            // TODO: Implémenter pour le type transport
-            throw new Error('Génération de PDF non implémentée pour les factures de transport')
+            const transportFacture = facture.value as FactureTransport
+            const typstData = transportFacture.toTypst(companySettings.value)
+            await generateAndSavePdf(facture.value.type, typstData)
         }
     } catch (error) {
         console.error('Erreur lors de la génération du PDF:', error)

@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import type { Facture } from '~/types/facture/common'
-import { h, resolveComponent } from 'vue'
+import { h, resolveComponent, ref, computed } from 'vue'
 import type { TableColumn } from '#ui/types'
+import { getPaginationRowModel } from '@tanstack/vue-table'
+import { templateRef } from '@vueuse/core'
+import type { PaginationState } from '@tanstack/vue-table'
 
 const UButton = resolveComponent('UButton')
 const UModal = resolveComponent('UModal')
@@ -9,15 +12,24 @@ const UModal = resolveComponent('UModal')
 const props = defineProps<{
   factures: Facture[]
   isLoading: boolean
+  total: number
+  itemsPerPage: number
 }>()
 
 const emit = defineEmits<{
   (e: 'show', facture: Facture): void
   (e: 'delete', facture: Facture): void
+  (e: 'page-change', page: number): void
 }>()
 
 const showDeleteModal = ref(false)
 const factureToDelete = ref<Facture | null>(null)
+const sorting = ref([{ id: 'date_creation', desc: true }])
+const tableRef = templateRef<HTMLTableElement>('table')
+const pagination = ref<PaginationState>({
+  pageIndex: 0,
+  pageSize: props.itemsPerPage
+})
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat('fr-FR', {
@@ -39,38 +51,130 @@ const handleDeleteConfirm = () => {
   }
 }
 
+const handlePageChange = (page: number) => {
+  emit('page-change', page)
+}
+
 const columns: TableColumn<Facture>[] = [
   {
     accessorKey: 'type',
-    header: 'Type',
-    cell: ({ row }) => row.getValue('type') === 'vente' ? 'Vente' : 'Transport'
+    header: ({ column }) => {
+      const isSorted = column.getIsSorted()
+      return h(UButton, {
+        color: 'neutral',
+        variant: 'ghost',
+        label: 'Type',
+        icon: isSorted
+          ? isSorted === 'asc'
+            ? 'i-lucide-arrow-up-narrow-wide'
+            : 'i-lucide-arrow-down-wide-narrow'
+          : 'i-lucide-arrow-up-down',
+        class: '-mx-2.5',
+        onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
+      })
+    },
+    cell: ({ row }) => {
+      const type = row.getValue('type') as string
+      return type === 'vente' ? 'Vente' : 'Transport'
+    }
   },
   {
     accessorKey: 'date_creation',
-    header: 'Date',
+    header: ({ column }) => {
+      const isSorted = column.getIsSorted()
+      return h(UButton, {
+        color: 'neutral',
+        variant: 'ghost',
+        label: 'Date',
+        icon: isSorted
+          ? isSorted === 'asc'
+            ? 'i-lucide-arrow-up-narrow-wide'
+            : 'i-lucide-arrow-down-wide-narrow'
+          : 'i-lucide-arrow-up-down',
+        class: '-mx-2.5',
+        onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
+      })
+    },
     cell: ({ row }) => formatDate(row.getValue('date_creation'))
   },
   {
     accessorKey: 'vehicle_brand',
-    header: 'Véhicule',
+    header: ({ column }) => {
+      const isSorted = column.getIsSorted()
+      return h(UButton, {
+        color: 'neutral',
+        variant: 'ghost',
+        label: 'Véhicule',
+        icon: isSorted
+          ? isSorted === 'asc'
+            ? 'i-lucide-arrow-up-narrow-wide'
+            : 'i-lucide-arrow-down-wide-narrow'
+          : 'i-lucide-arrow-up-down',
+        class: '-mx-2.5',
+        onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
+      })
+    },
     cell: ({ row }) => {
       const facture = row.original
       if (facture.type === 'vente') {
-        return `${facture.vehicle_brand} ${facture.vehicle_model}`
+        return `${facture.vehicle_brand || ''} ${facture.vehicle_model || ''}`
+      } else {
+        return '-'
       }
-      return '-'
+    }
+  },
+  {
+    accessorKey: 'trajet',
+    header: ({ column }) => {
+      const isSorted = column.getIsSorted()
+      return h(UButton, {
+        color: 'neutral',
+        variant: 'ghost',
+        label: 'Trajet',
+        icon: isSorted
+          ? isSorted === 'asc'
+            ? 'i-lucide-arrow-up-narrow-wide'
+            : 'i-lucide-arrow-down-wide-narrow'
+          : 'i-lucide-arrow-up-down',
+        class: '-mx-2.5',
+        onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
+      })
+    },
+    cell: ({ row }) => {
+      const facture = row.original
+      if (facture.type === 'transport') {
+        return `${facture.departure_location || ''} → ${facture.arrival_location || ''}`
+      } else {
+        return '-'
+      }
     }
   },
   {
     accessorKey: 'vehicle_price',
-    header: 'Montant',
+    header: ({ column }) => {
+      const isSorted = column.getIsSorted()
+      return h('div', { class: 'flex justify-end' }, [
+        h(UButton, {
+          color: 'neutral',
+          variant: 'ghost',
+          label: 'Montant',
+          icon: isSorted
+            ? isSorted === 'asc'
+              ? 'i-lucide-arrow-up-narrow-wide'
+              : 'i-lucide-arrow-down-wide-narrow'
+            : 'i-lucide-arrow-up-down',
+          class: '-mx-2.5',
+          onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
+        })
+      ])
+    },
     cell: ({ row }) => {
       const facture = row.original
       if (facture.type === 'vente') {
-        return formatPrice(facture.vehicle_price)
+        return h('div', { class: 'text-right font-medium' }, formatPrice(facture.vehicle_price))
       } else {
         const total = (facture.distance * facture.price_per_km) + facture.pickup_price
-        return formatPrice(total)
+        return h('div', { class: 'text-right font-medium' }, formatPrice(total))
       }
     }
   },
@@ -96,6 +200,8 @@ const columns: TableColumn<Facture>[] = [
     }
   }
 ]
+
+const table = useTemplateRef('table')
 </script>
 
 <template>
@@ -107,9 +213,16 @@ const columns: TableColumn<Facture>[] = [
     </template>
 
     <UTable
+      ref="table"
+      v-model:pagination="pagination"
+      v-model:sort="sorting"
       :loading="isLoading"
       :columns="columns"
       :data="factures"
+      :pagination-options="{
+        getPaginationRowModel: getPaginationRowModel()
+      }"
+      class="flex-1"
     >
       <template #empty>
         <div class="flex flex-col gap-1 items-center justify-center h-full">
@@ -118,6 +231,15 @@ const columns: TableColumn<Facture>[] = [
         </div>
       </template>
     </UTable>
+
+    <div class="flex justify-end pt-4">
+      <UPagination
+        :default-page="1"
+        :items-per-page="itemsPerPage"
+        :total="total"
+        @update:page="handlePageChange"
+      />
+    </div>
 
     <UModal v-model:open="showDeleteModal">
       <template #content>

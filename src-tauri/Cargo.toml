@@ -1,6 +1,6 @@
 [package]
 name = "autoinvoice"
-version = "1.4.2"
+version = "1.4.3"
 description = "Invoicing tool"
 authors = [ "Gwenaël HUBLER" ]
 license = "MIT"
@@ -40,10 +40,9 @@ tauri-plugin-http = "2"
 
 [dependencies.tauri]
 version = "2.2.5"
-features = [
+features = [ "macos-private-api",
   "tray-icon",
-  "unstable"
-]
+  "unstable"]
 
 [dependencies.serde]
 version = "1"

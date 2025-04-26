@@ -1,5 +1,5 @@
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
-use tauri::menu::{Menu, MenuItem};
+
 mod mac;
 mod migrations;
 mod typst;
@@ -15,12 +15,6 @@ pub fn run() {
         )
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
-        .setup(|app| {
-            let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
-            let _menu = Menu::with_items(app, &[&quit_i])?;
-
-            Ok(())
-        })
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_os::init())

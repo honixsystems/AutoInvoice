@@ -5,6 +5,7 @@ import { FactureTransport } from '~/types/facture/transport'
 import type { Facture, FactureBaseDB } from '~/types/facture/common'
 import type { FactureVenteDB } from '~/types/facture/vente'
 import type { FactureTransportDB } from '~/types/facture/transport'
+import type { FactureVenteFilters, FactureTransportFilters, FactureFilters } from '~/types/facture/filters'
 
 export function useFactures() {
   const db = useDatabase()
@@ -30,16 +31,106 @@ export function useFactures() {
     return `${dateStr}-${count.toString().padStart(3, '0')}`
   }
 
-  // Charger les factures depuis la base de données
-  const loadFactures = async (page: number = 1, limit: number = 10): Promise<Facture[]> => {
+  const loadFactures = async (
+    page: number = 1,
+    limit: number = 10,
+    filters: FactureFilters = {}
+  ): Promise<{ factures: Facture[], total: number }> => {
     try {
-      // Charger toutes les factures de base
-      const baseFactures = await db.select<FactureBaseDB[]>(
-        "SELECT * FROM factures ORDER BY date_creation DESC LIMIT ? OFFSET ?",
-        [limit, (page - 1) * limit]
+        let baseQuery = `
+        SELECT f.* FROM factures f
+        WHERE f.type = 'vente' OR f.type = 'transport'
+      `
+      const queryParams: any[] = []
+
+      // Ajouter les conditions de filtrage
+      if (filters.client_id) {
+        baseQuery += " AND f.client_id = ?"
+        queryParams.push(filters.client_id)
+      }
+
+      // Obtenir le nombre total de factures avec les filtres
+      const totalResult = await db.select<{ count: number }[]>(
+        `SELECT COUNT(*) as count FROM (${baseQuery}) as filtered_factures`,
+        queryParams
       )
+      const total = totalResult[0]?.count || 0
+
+      // Ajouter la pagination à la requête
+      baseQuery += " ORDER BY f.date_creation DESC LIMIT ? OFFSET ?"
+      queryParams.push(limit, (page - 1) * limit)
+
+      // Charger les factures avec pagination
+      const baseFactures = await db.select<FactureBaseDB[]>(baseQuery, queryParams)
 
       const factures: Facture[] = []
+
+      // Pour chaque facture de base, charger les détails spécifiques
+      for (const baseDB of baseFactures) {
+        const facture = await getFacture(baseDB.id)
+        if (facture) {
+          factures.push(facture)
+        }
+      }
+
+      return { factures, total }
+    } catch (e) {
+      console.error('Erreur lors du chargement des factures:', e)
+      return { factures: [], total: 0 }
+    }
+  }
+
+  // Charger les factures de vente depuis la base de données
+  const loadFacturesVente = async (
+    page: number = 1, 
+    limit: number = 10,
+    filters: FactureVenteFilters = {}
+  ): Promise<{ factures: FactureVente[], total: number }> => {
+    try {
+      // Construire la requête de base avec une jointure pour les données de vente
+      let baseQuery = `
+        SELECT f.* FROM factures f
+        INNER JOIN factures_vente v ON f.id = v.facture_id
+        WHERE f.type = 'vente'
+      `
+      const queryParams: any[] = []
+
+      // Ajouter les conditions de filtrage
+      if (filters.client_id) {
+        baseQuery += " AND f.client_id = ?"
+        queryParams.push(filters.client_id)
+      }
+
+      if (filters.client) {
+        baseQuery += " AND EXISTS (SELECT 1 FROM clients c WHERE c.id = f.client_id AND LOWER(c.name) LIKE LOWER(?))"
+        queryParams.push(`%${filters.client}%`)
+      }
+      
+      if (filters.vehicle_brand) {
+        baseQuery += " AND LOWER(v.vehicle_brand) LIKE LOWER(?)"
+        queryParams.push(`%${filters.vehicle_brand}%`)
+      }
+      
+      if (filters.vehicle_model) {
+        baseQuery += " AND LOWER(v.vehicle_model) LIKE LOWER(?)"
+        queryParams.push(`%${filters.vehicle_model}%`)
+      }
+
+      // Obtenir le nombre total de factures de vente avec les filtres
+      const totalResult = await db.select<{ count: number }[]>(
+        `SELECT COUNT(*) as count FROM (${baseQuery}) as filtered_factures`,
+        queryParams
+      )
+      const total = totalResult[0]?.count || 0
+
+      // Ajouter la pagination à la requête
+      baseQuery += " ORDER BY f.date_creation DESC LIMIT ? OFFSET ?"
+      queryParams.push(limit, (page - 1) * limit)
+
+      // Charger les factures de vente avec pagination
+      const baseFactures = await db.select<FactureBaseDB[]>(baseQuery, queryParams)
+
+      const factures: FactureVente[] = []
 
       // Pour chaque facture de base, charger les détails spécifiques
       for (const baseDB of baseFactures) {
@@ -54,51 +145,121 @@ export function useFactures() {
           }
         }
 
-        if (base.type === 'vente') {
-          const vente = await db.select<FactureVenteDB[]>(
-            "SELECT * FROM factures_vente WHERE facture_id = ?",
-            [base.id]
-          )
-          if (vente.length > 0 && vente[0]) {
-            const venteData = vente[0]
-            factures.push(new FactureVente({
-              ...base,
-              type: 'vente',
-              vehicle_brand: venteData.vehicle_brand,
-              vehicle_model: venteData.vehicle_model,
-              vehicle_chassis: venteData.vehicle_chassis,
-              vehicle_mileage: venteData.vehicle_mileage,
-              vehicle_color: venteData.vehicle_color,
-              vehicle_type: venteData.vehicle_type,
-              vehicle_first_registration: venteData.vehicle_first_registration,
-              vehicle_price: venteData.vehicle_price,
-              deposit: venteData.deposit
-            }))
-          }
-        } else {
-          const transport = await db.select<FactureTransportDB[]>(
-            "SELECT * FROM factures_transport WHERE facture_id = ?",
-            [base.id]
-          )
-          if (transport.length > 0 && transport[0]) {
-            const transportData = transport[0]
-            factures.push(new FactureTransport({
-              ...base,
-              type: 'transport',
-              transport_date: transportData.transport_date,
-              departure_location: transportData.departure_location,
-              arrival_location: transportData.arrival_location,
-              distance: transportData.distance,
-              price_per_km: transportData.price_per_km,
-              pickup_price: transportData.pickup_price
-            }))
-          }
+        const vente = await db.select<FactureVenteDB[]>(
+          "SELECT * FROM factures_vente WHERE facture_id = ?",
+          [base.id]
+        )
+        if (vente.length > 0 && vente[0]) {
+          const venteData = vente[0]
+          factures.push(new FactureVente({
+            ...base,
+            type: 'vente',
+            vehicle_brand: venteData.vehicle_brand,
+            vehicle_model: venteData.vehicle_model,
+            vehicle_chassis: venteData.vehicle_chassis,
+            vehicle_mileage: venteData.vehicle_mileage,
+            vehicle_color: venteData.vehicle_color,
+            vehicle_type: venteData.vehicle_type,
+            vehicle_first_registration: venteData.vehicle_first_registration,
+            vehicle_price: venteData.vehicle_price,
+            deposit: venteData.deposit
+          }))
         }
       }
-      return factures
+      return { factures, total }
     } catch (e) {
-      console.error('Erreur lors du chargement des factures:', e)
-      return []
+      console.error('Erreur lors du chargement des factures de vente:', e)
+      return { factures: [], total: 0 }
+    }
+  }
+
+  // Charger les factures de transport depuis la base de données
+  const loadFacturesTransport = async (
+    page: number = 1, 
+    limit: number = 10,
+    filters: FactureTransportFilters = {}
+  ): Promise<{ factures: FactureTransport[], total: number }> => {
+    try {
+      // Construire la requête de base avec une jointure pour les données de transport
+      let baseQuery = `
+        SELECT f.* FROM factures f
+        INNER JOIN factures_transport t ON f.id = t.facture_id
+        WHERE f.type = 'transport'
+      `
+      const queryParams: any[] = []
+
+      // Ajouter les conditions de filtrage
+      if (filters.client_id) {
+        baseQuery += " AND f.client_id = ?"
+        queryParams.push(filters.client_id)
+      }
+
+      if (filters.client) {
+        baseQuery += " AND EXISTS (SELECT 1 FROM clients c WHERE c.id = f.client_id AND LOWER(c.name) LIKE LOWER(?))"
+        queryParams.push(`%${filters.client}%`)
+      }
+      
+      if (filters.departure_location) {
+        baseQuery += " AND LOWER(t.departure_location) LIKE LOWER(?)"
+        queryParams.push(`%${filters.departure_location}%`)
+      }
+      
+      if (filters.arrival_location) {
+        baseQuery += " AND LOWER(t.arrival_location) LIKE LOWER(?)"
+        queryParams.push(`%${filters.arrival_location}%`)
+      }
+
+      // Obtenir le nombre total de factures de transport avec les filtres
+      const totalResult = await db.select<{ count: number }[]>(
+        `SELECT COUNT(*) as count FROM (${baseQuery}) as filtered_factures`,
+        queryParams
+      )
+      const total = totalResult[0]?.count || 0
+
+      // Ajouter la pagination à la requête
+      baseQuery += " ORDER BY f.date_creation DESC LIMIT ? OFFSET ?"
+      queryParams.push(limit, (page - 1) * limit)
+
+      // Charger les factures de transport avec pagination
+      const baseFactures = await db.select<FactureBaseDB[]>(baseQuery, queryParams)
+
+      const factures: FactureTransport[] = []
+
+      // Pour chaque facture de base, charger les détails spécifiques
+      for (const baseDB of baseFactures) {
+        // Créer une instance de facture de base
+        const base = new FactureBase(baseDB)
+
+        // Charger le client associé à la facture
+        if (baseDB.client_id) {
+          const client = await clientsComposable.getClient(baseDB.client_id)
+          if (client) {
+            base.client = client
+          }
+        }
+
+        const transport = await db.select<FactureTransportDB[]>(
+          "SELECT * FROM factures_transport WHERE facture_id = ?",
+          [base.id]
+        )
+        if (transport.length > 0 && transport[0]) {
+          const transportData = transport[0]
+          factures.push(new FactureTransport({
+            ...base,
+            type: 'transport',
+            transport_date: transportData.transport_date,
+            departure_location: transportData.departure_location,
+            arrival_location: transportData.arrival_location,
+            distance: transportData.distance,
+            price_per_km: transportData.price_per_km,
+            pickup_price: transportData.pickup_price
+          }))
+        }
+      }
+      return { factures, total }
+    } catch (e) {
+      console.error('Erreur lors du chargement des factures de transport:', e)
+      return { factures: [], total: 0 }
     }
   }
 
@@ -408,6 +569,8 @@ export function useFactures() {
 
   return {
     loadFactures,
+    loadFacturesVente,
+    loadFacturesTransport,
     addFacture,
     updateFacture,
     deleteFacture,

@@ -6,7 +6,7 @@ import { BaseDirectory, writeFile } from '@tauri-apps/plugin-fs'
 import { useSettings } from '~/composables/useSettings'
 import LogoUploader from './LogoUploader.vue'
 import { computed } from 'vue'
-
+import { shadesOf } from '~/utils/theme'
 const { companySettings, loadSettings } = useSettings()
 
 const schema = z.object({
@@ -72,7 +72,10 @@ onMounted(async () => {
 })
 
 function updatePrimaryColorCSS(hexColor: string) {
-  document.documentElement.style.setProperty('--color-customtheme-500', hexColor)
+  const shades = shadesOf(hexColor)
+  for (const shade in shades) {
+    document.documentElement.style.setProperty(`--color-customtheme-${shade}`, shades[shade] ?? '')
+  }
 }
 
 // Watcher pour sauvegarder automatiquement les changements

@@ -1,7 +1,7 @@
 {
 	"name": "autoinvoice",
 	"type": "module",
-	"version": "1.4.2",
+	"version": "1.4.3",
 	"private": true,
 	"packageManager": "pnpm@10.6.2",
 	"description": "Invoice management system",
@@ -47,6 +47,8 @@
 		"pagedjs": "^0.4.3",
 		"vue": "^3.5.13",
 		"vue-router": "^4.5.0",
+		"window": "link:@tauri-apps/api/window",
+		"xlsx": "^0.18.5",
 		"zod": "^3.24.2"
 	},
 	"devDependencies": {

@@ -88,6 +88,7 @@
       noVat: "Not Subject to VAT",
       reverseCharge: "Reverse Charge",
       total: "Total to pay",
+      totalInclTax: "Total incl. tax",
       cancellationTotal: "Total to refund",
       deposit: "Deposit",
       owner: "Owner",
@@ -142,6 +143,7 @@
       noVat: "Non sujet à la TVA",
       reverseCharge: "Facturation inversée",
       total: "Reste à payer",
+      totalInclTax: "Total TTC",
       cancellationTotal: "Total à rembourser",
       deposit: "Accompte",
       owner: "Titulaire",
@@ -196,6 +198,7 @@
       noVat: "Nicht Umsatzsteuerpflichtig",
       reverseCharge: "Steuerschuldnerschaft des\nLeistungsempfängers",
       total: "Rest zu zahlen",
+      totalInclTax: "Total inkl. Steur",
       cancellationTotal: "Total zu erstatten",
       deposit: "Anzahlung",
       owner: "Inhaber",
@@ -463,19 +466,38 @@
 
   if total != none and not config.cancellation {
     v(2em)
-    align(right)[
-      #line(length: 100%, stroke: 1pt + moreGrayish)
-      #text()[*#t.subtotal*:] #text()[*#calc.round(total, digits: 2)*] #text()[ *#config.currency*] \
-      #if deposit != none {
-        text()[*#t.deposit*: ]; text()[*#deposit*]; text()[ *#config.currency*]; str("\n")
-      }
-      #v(0.1em)
-      #if deposit != none {
-        text(size: 1.5em, fill: primaryColor)[*#t.total*: ]; text(size: 1.5em, fill: primaryColor)[*#calc.round(total - deposit, digits: 2)*]; text(size: 1.5em, fill: primaryColor)[ *#config.currency*]
-      } else {
-        text(size: 1.5em, fill: primaryColor)[*#t.total*: ]; text(size: 1.5em, fill: primaryColor)[*#total*]; text(size: 1.5em, fill: primaryColor)[ *#config.currency*]
-      }
-    ]
+    if config.displayVat == false {
+      align(right)[
+        #line(length: 100%, stroke: 1pt + moreGrayish)
+        #text()[*#t.subtotal*:] #text()[*#calc.round(total, digits: 2)*] #text()[ *#config.currency*] \
+        #if deposit != none {
+          text()[*#t.deposit*: ]; text()[*#deposit*]; text()[ *#config.currency*]; str("\n")
+        }
+        #v(0.1em)
+        #if deposit != none {
+          text(size: 1.5em, fill: primaryColor)[*#t.total*: ]; text(size: 1.5em, fill: primaryColor)[*#calc.round(total - deposit, digits: 2)*]; text(size: 1.5em, fill: primaryColor)[ *#config.currency*]
+        } else {
+          text(size: 1.5em, fill: primaryColor)[*#t.total*: ]; text(size: 1.5em, fill: primaryColor)[*#total*]; text(size: 1.5em, fill: primaryColor)[ *#config.currency*]
+        }
+      ]
+    }
+    if config.displayVat == true {
+      let vatAmount = calc.round(total * (config.vatRate / 100), digits: 2)
+      align(right)[
+        #line(length: 100%, stroke: 1pt + moreGrayish)
+        #text()[*#t.subtotal*:] #text()[*#calc.round(total, digits: 2)*] #text()[ *#config.currency*] \
+        #text()[*#t.vat*:] #text()[*#calc.round(vatAmount, digits: 2)*] #text()[ *#config.currency*] \
+        #if deposit != none {
+          text()[*#t.deposit*: ]; text()[*#deposit*]; text()[ *#config.currency*]; str("\n")
+        }
+        #v(0.1em)
+        #if deposit != none {
+          text(size: 1.5em, fill: primaryColor)[*#t.totalInclTax*: ]; text(size: 1.5em, fill: primaryColor)[*#calc.round(total - deposit, digits: 2)*]; text(size: 1.5em, fill: primaryColor)[ *#config.currency*]
+        } else {
+          text(size: 1.5em, fill: primaryColor)[*#t.totalInclTax*: ]; text(size: 1.5em, fill: primaryColor)[*#total*]; text(size: 1.5em, fill: primaryColor)[ *#config.currency*]
+        }
+      ]
+    }
   }
 
   if config.cancellation {

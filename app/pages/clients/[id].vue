@@ -12,17 +12,19 @@ const { getClient } = useClients()
 const { loadFactures, deleteFacture } = useFactures()
 
 const client = ref<Client | null>(null)
-const factures = ref<Facture[]>([])
+const facturesRef = ref<Facture[]>([])
 const isLoading = ref(true)
 const error = ref<string | null>(null)
 const toast = useToast()
 const showEditModal = ref(false)
+const currentPage = ref(1)
+const itemsPerPage = ref(10)
+const totalFactures = ref(0)
 
-// Charger les données du client et ses factures
-onMounted(async () => {
+// Charger les données du client
+const loadClientData = async () => {
   try {
-    isLoading.value = true
-    const clientId = route.params.id as string
+    const clientId = (route.params as { id: string }).id
     const clientData = await getClient(clientId)
     
     if (!clientData) {
@@ -31,20 +33,47 @@ onMounted(async () => {
     }
 
     client.value = clientData
-    factures.value = await loadFactures()
-    factures.value = factures.value.filter(f => f.client_id === clientId)
   } catch (e) {
-    console.error('Erreur lors du chargement des données:', e)
-    error.value = 'Une erreur est survenue lors du chargement des données'
+    console.error('Erreur lors du chargement du client:', e)
+    error.value = 'Une erreur est survenue lors du chargement du client'
     toast.add({
       title: 'Erreur',
-      description: 'Une erreur est survenue lors du chargement des données',
+      description: 'Une erreur est survenue lors du chargement du client',
+      color: 'error'
+    })
+  }
+}
+
+// Charger les factures du client
+const loadFacturesData = async (page: number = 1) => {
+  try {
+    isLoading.value = true
+    const clientId = (route.params as { id: string }).id
+    const { factures: factures, total: total } = await loadFactures(page, itemsPerPage.value, { client_id: clientId })
+    facturesRef.value = [...factures]
+    totalFactures.value = total
+  } catch (e) {
+    console.error('Erreur lors du chargement des factures:', e)
+    toast.add({
+      title: 'Erreur',
+      description: 'Une erreur est survenue lors du chargement des factures',
       color: 'error'
     })
   } finally {
     isLoading.value = false
   }
+}
+
+// Charger les données initiales
+onMounted(async () => {
+  await loadClientData()
+  await loadFacturesData(1)
 })
+
+const handlePageChange = (page: number) => {
+  currentPage.value = page
+  loadFacturesData(page)
+}
 
 const handleShowFacture = (facture: Facture) => {
   navigateTo(`/facture/${facture.id}`)
@@ -53,7 +82,7 @@ const handleShowFacture = (facture: Facture) => {
 const handleDeleteFacture = async (facture: Facture) => {
   try {
     await deleteFacture(facture.id)
-    factures.value = factures.value.filter(f => f.id !== facture.id)
+    facturesRef.value = facturesRef.value.filter(f => f.id !== facture.id)
     toast.add({
       title: 'Succès',
       description: 'La facture a été supprimée avec succès',
@@ -86,13 +115,6 @@ const handleClientUpdated = async () => {
     description: 'Le client a été mis à jour avec succès',
     color: 'success'
   })
-
-  if (client.value) {
-    const clientData = await getClient(client.value.id)
-    if (clientData) {
-      client.value = clientData
-    }
-  }
 }
 </script>
 
@@ -127,17 +149,20 @@ const handleClientUpdated = async () => {
         />
       </div>
 
-      <div v-else-if="isLoading" class="flex justify-center items-center h-64">
+      <div v-else-if="isLoading && !client" class="flex justify-center items-center h-64">
         <UIcon name="i-heroicons-arrow-path" class="text-4xl animate-spin" />
       </div>
 
       <div v-else-if="client" class="space-y-8">
         <ClientDisplay :client="client" />
         <ClientFactures
-          :factures="factures"
+          :factures="facturesRef"
           :is-loading="isLoading"
+          :total="totalFactures"
+          :items-per-page="itemsPerPage"
           @show="handleShowFacture"
           @delete="handleDeleteFacture"
+          @page-change="handlePageChange"
         />
       </div>
     </div>

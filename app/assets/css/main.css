@@ -29,7 +29,7 @@
 	--color-customtheme-950: #030100;
 }
 
-body {
+html, body {
 	@apply bg-gray-50;
 }
 
@@ -62,4 +62,31 @@ body {
 .layout-enter-from,
 .layout-leave-to {
 	@apply opacity-0;
+}
+
+/* Scrollbar personnalisée */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-customtheme-300);
+    border-radius: 4px;
+    transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-customtheme-400);
+}
+
+/* Pour Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-customtheme-300) rgba(0, 0, 0, 0.05);
 }

@@ -1,4 +1,6 @@
 import { FactureBase, type FactureBaseDB } from "~/types/facture/common";
+import type { CompanySettings } from "../settings";
+import type { TemplateTransport } from "../typst/transport";
 
 export class FactureTransport extends FactureBase {
     override type: 'transport';
@@ -30,6 +32,21 @@ export class FactureTransport extends FactureBase {
             distance: this.distance,
             price_per_km: this.price_per_km,
             pickup_price: this.pickup_price
+        };
+    }
+
+    override toTypst(companySettings: CompanySettings): TemplateTransport {
+        const base = super.toTypst(companySettings);
+        return {
+            ...base,
+            transport: {
+                from: this.departure_location || '',
+                to: this.arrival_location || '',
+                distance: this.distance || 0
+            },
+            pricePerKm: this.price_per_km || 0,
+            pickupPrice: this.pickup_price || 0,
+            notes: this.additional_notes || ''
         };
     }
 }

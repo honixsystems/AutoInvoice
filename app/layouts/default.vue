@@ -1,7 +1,8 @@
 <template>
-	<div class="bg-gray-50 min-h-screen min-w-screen">
+	<div class="min-h-screen min-w-screen">
+		<!-- <TitleBar /> -->
 		<AppCommandPalette />
-		<UContainer class="flex-grow">
+		<UContainer class="flex-grow pt-10">
 			<slot />
 		</UContainer>
 		<AppFooter />
@@ -10,6 +11,7 @@
 
 <script setup>
 import AppFooter from '~/components/AppFooter.vue'
+import TitleBar from '~/components/TitleBar.vue'
 
 const router = useRouter()
 

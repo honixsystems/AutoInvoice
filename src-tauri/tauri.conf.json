@@ -35,7 +35,7 @@
 		"devUrl": "http://localhost:3000"
 	},
 	"productName": "AutoInvoice",
-	"version": "1.4.2",
+	"version": "1.4.3",
 	"identifier": "com.honix.autoinvoice",
 	"plugins": {
 		"updater": {
@@ -49,6 +49,7 @@
 		}
 	},
 	"app": {
+		"macOSPrivateApi": true,
 		"windows": [
 			{
 				"title": "AutoInvoice - Gestion de la facturation",

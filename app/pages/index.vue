@@ -59,7 +59,7 @@ const navigateTo = (type: 'transport' | 'vente') => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen">
     <div class="container mx-auto px-4 py-8">
       <!-- Header avec navigation -->
       <header class="flex justify-between items-center mb-12">

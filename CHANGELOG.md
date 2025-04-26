@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.4.3] - 2025-04-26
+- Ajout de la pagination sur les factures et les clients
+- Résolution d'un problème concernant les couleurs de l'application
+- Ajout du modèle de facture de transport
+
 ## [1.4.2] - 2025-04-25
 - Résolution du problème de CORS avec le serveur de license
 - Résolution du problème de la configuration initiale

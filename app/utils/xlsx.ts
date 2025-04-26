@@ -1,3 +1,5 @@
+import * as XLSX from 'xlsx';
+
 export const exportToCsv = async (rows: object[], headers?: string[]): Promise<Uint8Array> => {
   if (!rows || !rows.length) {
       throw new Error("No rows to export");
@@ -37,4 +39,44 @@ export const exportToCsv = async (rows: object[], headers?: string[]): Promise<U
 
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   return new Uint8Array(await blob.arrayBuffer());
+}
+
+export const exportToExcel = async (rows: Record<string, unknown>[], headers?: string[]): Promise<Uint8Array> => {
+  if (!rows || !rows.length) {
+    throw new Error("No rows to export");
+  }
+
+  const firstRow = rows[0];
+  if (!firstRow) {
+    throw new Error("First row is undefined");
+  }
+
+  const keys: string[] = Object.keys(firstRow);
+  const columnHeaders: string[] = headers || keys;
+
+  // Créer un nouveau workbook
+  const wb = XLSX.utils.book_new();
+
+  // Préparer les données pour Excel
+  const excelData = rows.map(row => {
+    return keys.map(k => {
+      const cell = row[k];
+      if (cell === null || cell === undefined) return '';
+      if (cell instanceof Date) return cell.toLocaleString();
+      return String(cell);
+    });
+  });
+
+  // Ajouter les en-têtes et les données
+  const ws = XLSX.utils.aoa_to_sheet([
+    columnHeaders,
+    ...excelData
+  ]);
+
+  // Ajouter la feuille au workbook
+  XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+
+  // Générer le fichier Excel
+  const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  return new Uint8Array(excelBuffer);
 }

@@ -2,25 +2,39 @@
 import { h, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import { type FactureVente } from '~/types/facture/vente'
+import { type FactureVenteFilters } from '~/types/facture/filters'
 import { save } from "@tauri-apps/plugin-dialog";
 import { writeFile } from "@tauri-apps/plugin-fs";
 import { openPath } from '@tauri-apps/plugin-opener';
-import { exportToCsv } from '~/utils/csv';
+import { exportToExcel } from '~/utils/xlsx';
+import { getPaginationRowModel } from '@tanstack/vue-table'
+
 const UButton = resolveComponent('UButton')
 const UModal = resolveComponent('UModal')
 
 const props = defineProps<{
   factures: FactureVente[]
   isLoading?: boolean
+  total: number
+  itemsPerPage?: number
 }>()
+
+const pagination = ref({
+  pageIndex: 0,
+  pageSize: props.itemsPerPage || 10
+})
 
 const emit = defineEmits<{
   (e: 'show', facture: FactureVente): void
   (e: 'delete', facture: FactureVente): void
+  (e: 'page-change', page: number): void
+  (e: 'filter-change', filters: FactureVenteFilters): void
 }>()
 
 const showDeleteModal = ref(false)
 const factureToDelete = ref<FactureVente | null>(null)
+const filters = ref<FactureVenteFilters>({})
+const filterTimeout = ref<number | null>(null)
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat('fr-FR', {
@@ -31,7 +45,7 @@ const formatPrice = (price: number) => {
 
 const exportToCSV = async () => {
   try {
-    const arr = await exportToCsv(
+    const arr = await exportToExcel(
       props.factures.map(facture => ({
         client: facture.client?.name ?? 'N/A',
         marque: facture.vehicle_brand,
@@ -43,8 +57,8 @@ const exportToCSV = async () => {
     )
     const selected = await save({
       title: 'Export des ventes',
-      defaultPath: `export_ventes_${new Date().toISOString().split('T')[0]}.csv`,
-      filters: [{ name: 'CSV', extensions: ['csv'] }]
+      defaultPath: `export_ventes_${new Date().toISOString().split('T')[0]}.xlsx`,
+      filters: [{ name: 'Excel', extensions: ['xlsx'] }]
     })
 
     if (selected) {
@@ -52,7 +66,7 @@ const exportToCSV = async () => {
       await openPath(selected)
     }
   } catch (error) {
-    console.error('Erreur lors de l\'export CSV:', error)
+    console.error('Erreur lors de l\'export Excel:', error)
   }
 }
 
@@ -67,6 +81,20 @@ const handleDeleteConfirm = () => {
     showDeleteModal.value = false
     factureToDelete.value = null
   }
+}
+
+const handleFilterChange = (key: keyof FactureVenteFilters, value: string | number) => {
+  filters.value[key] = value.toString()
+  
+  // Annuler le timeout précédent s'il existe
+  if (filterTimeout.value !== null) {
+    clearTimeout(filterTimeout.value)
+  }
+  
+  // Créer un nouveau timeout pour éviter trop d'appels
+  filterTimeout.value = window.setTimeout(() => {
+    emit('filter-change', filters.value)
+  }, 300)
 }
 
 const columns: TableColumn<FactureVente>[] = [
@@ -217,30 +245,28 @@ const columnFilters = ref([
 ])
 
 const sorting = ref([{ id: 'date_creation', desc: true }])
-const page = ref(1)
-const itemsPerPage = ref(10)
 </script>
 
 <template>
   <div class="flex flex-col flex-1 w-full">
     <div class="flex px-4 py-3.5 border-b border-(--ui-border-accented) gap-4">
       <UInput
-        :model-value="table?.tableApi?.getColumn('client')?.getFilterValue() as string"
+        :model-value="filters.client"
         class="max-w-sm"
         placeholder="Rechercher par client..."
-        @update:model-value="table?.tableApi?.getColumn('client')?.setFilterValue($event)"
+        @update:model-value="(value) => handleFilterChange('client', value)"
       />
       <UInput
-        :model-value="table?.tableApi?.getColumn('vehicle_brand')?.getFilterValue() as string"
+        :model-value="filters.vehicle_brand"
         class="max-w-sm"
         placeholder="Rechercher par marque..."
-        @update:model-value="table?.tableApi?.getColumn('vehicle_brand')?.setFilterValue($event)"
+        @update:model-value="(value) => handleFilterChange('vehicle_brand', value)"
       />
       <UInput
-        :model-value="table?.tableApi?.getColumn('vehicle_model')?.getFilterValue() as string"
+        :model-value="filters.vehicle_model"
         class="max-w-sm"
         placeholder="Rechercher par modèle..."
-        @update:model-value="table?.tableApi?.getColumn('vehicle_model')?.setFilterValue($event)"
+        @update:model-value="(value) => handleFilterChange('vehicle_model', value)"
       />
       <UButton
         color="neutral"
@@ -249,19 +275,21 @@ const itemsPerPage = ref(10)
         class="ml-auto"
         @click="exportToCSV"
       >
-        Exporter en CSV
+        Exporter en Excel
       </UButton>
     </div>
 
     <UTable
       ref="table"
+      v-model:pagination="pagination"
       v-model:column-filters="columnFilters"
       v-model:sort="sorting"
-      v-model:page="page"
-      :rows-per-page="itemsPerPage"
       :data="factures"
       :columns="columns"
       :loading="isLoading"
+      :pagination-options="{
+        getPaginationRowModel: getPaginationRowModel()
+      }"
       class="flex-1"
     >
       <template #empty>
@@ -271,6 +299,16 @@ const itemsPerPage = ref(10)
         </div>
       </template>
     </UTable>
+
+    <div class="flex justify-end pt-4">
+      <UPagination
+        :default-page="(table?.tableApi?.getState().pagination.pageIndex || 0) + 1"
+        :items-per-page="table?.tableApi?.getState().pagination.pageSize"
+        :total="total"
+        @update:page="(p) => emit('page-change', p)"
+      />
+    </div>
+
     <UModal v-model:open="showDeleteModal">
       <template #content>
         <UCard>

@@ -2,7 +2,7 @@ import { Store } from "@tauri-apps/plugin-store"
 import { onMounted, ref } from "vue"
 import type { CompanySettings, AppSettings } from "~/types/settings"
 import { BaseDirectory, readFile } from '@tauri-apps/plugin-fs'
-
+import { shadesOf } from "~/utils/theme"
 export const useSettings = () => {
   const companySettings = ref<CompanySettings | null>(null)
   const appSettings = ref<AppSettings | null>(null)
@@ -34,6 +34,19 @@ export const useSettings = () => {
         if (companySettings.value) {
           companySettings.value.logoData = undefined
         }
+      }
+
+      // Charger les couleurs personnalisées
+      try {
+        const customThemeColor = companySettings.value?.primaryColor
+        if (customThemeColor) {
+          const shades = shadesOf(customThemeColor)
+          for (const shade in shades) {
+            document.documentElement.style.setProperty(`--color-customtheme-${shade}`, shades[shade] ?? '')
+          }
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des couleurs personnalisées:', error)
       }
     } catch (error) {
       console.error('Erreur lors du chargement des paramètres:', error)
