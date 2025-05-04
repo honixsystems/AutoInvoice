@@ -1,20 +1,18 @@
 <script setup lang="ts">
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
-import { Store } from '@tauri-apps/plugin-store'
 import { getLicenseKey, validateStoredLicense, deactivateStoredLicense } from '~/utils/license'
+import { useSettings } from '~/composables/useSettings'
 
 const schema = z.object({
   enableVente: z.boolean(),
-  enableTransport: z.boolean()
+  enableTransport: z.boolean(),
+  enableGarage: z.boolean()
 })
 
 type Schema = z.output<typeof schema>
 
-const state = reactive<Partial<Schema>>({
-  enableVente: true,
-  enableTransport: true
-})
+const { appSettings } = useSettings()
 
 const licenseState = reactive({
   key: '',
@@ -31,6 +29,7 @@ type Feature = {
   description: string
   icon: string
   color: 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral'
+  disabled?: boolean
 }
 
 const features: Feature[] = [
@@ -39,14 +38,24 @@ const features: Feature[] = [
     label: 'Facturation de vente',
     description: 'Permet de créer et gérer des factures pour la vente de véhicules',
     icon: 'i-heroicons-credit-card',
-    color: 'primary'
+    color: 'primary',
+    disabled: false
   },
   {
     name: 'enableTransport',
     label: 'Facturation de transport',
     description: 'Permet de créer et gérer des factures pour le transport de véhicules',
     icon: 'i-heroicons-truck',
-    color: 'primary'
+    color: 'primary',
+    disabled: false
+  },
+  {
+    name: 'enableGarage',
+    label: 'Facturation de garage',
+    description: 'Permet de créer et gérer des factures pour votre garage',
+    icon: 'i-heroicons-wrench-screwdriver',
+    color: 'primary',
+    disabled: true
   }
 ]
 
@@ -58,12 +67,6 @@ const emit = defineEmits<{
 
 onMounted(async () => {
   try {
-    const store = await Store.load('app-settings.json')
-    const savedSettings = await store.get('settings')
-    if (savedSettings) {
-      Object.assign(state, savedSettings)
-    }
-
     // Charger les informations de la licence
     const licenseKey = await getLicenseKey()
     if (licenseKey) {
@@ -79,22 +82,13 @@ onMounted(async () => {
   }
 })
 
-// Watcher pour sauvegarder automatiquement les changements
-watch(state, async (newState) => {
-  try {
+// Watcher pour gérer l'état de sauvegarde
+watch(appSettings, (newSettings) => {
+  if (newSettings) {
     emit('saving', true)
-    const store = await Store.load('app-settings.json')
-    await store.set('settings', newState)
-    await store.save()
-    emit('saving', false)
-  } catch (error) {
-    console.error('Erreur lors de la sauvegarde:', error)
-    emit('saving', false)
-    toast.add({
-      title: 'Erreur',
-      description: 'Une erreur est survenue lors de la sauvegarde.',
-      color: 'error'
-    })
+    setTimeout(() => {
+      emit('saving', false)
+    }, 1000)
   }
 }, { deep: true })
 
@@ -132,7 +126,7 @@ const handleDeactivateLicense = async () => {
 </script>
 
 <template>
-  <UForm :schema="schema" :state="state" class="space-y-16">
+  <UForm v-if="appSettings" :schema="schema" :state="appSettings" class="space-y-16">
     <div class="grid grid-cols-1 gap-12">
       <div class="space-y-6">
         <div class="flex flex-col">
@@ -145,7 +139,7 @@ const handleDeactivateLicense = async () => {
             v-for="feature in features"
             :key="feature.name"
             class="transition-all duration-200"
-            :class="{ 'opacity-75': !state[feature.name] }"
+            :class="{ 'opacity-75': !appSettings[feature.name] || feature.disabled }"
           >
             <div class="flex items-start gap-4">
               <div :class="`rounded-lg`">
@@ -158,9 +152,13 @@ const handleDeactivateLicense = async () => {
               <div class="flex-1">
                 <div class="flex items-center justify-between">
                   <h4 class="font-medium text-gray-900">{{ feature.label }}</h4>
-                  <USwitch
-                    v-model="state[feature.name]"
-                  />
+                  <div class="flex items-center gap-2">
+                    <UBadge v-if="feature.disabled" color="neutral" variant="soft">Bientôt disponible</UBadge>
+                    <USwitch
+                      v-model="appSettings[feature.name]"
+                      :disabled="feature.disabled"
+                    />
+                  </div>
                 </div>
                 <p class="mt-1 text-sm text-gray-500">{{ feature.description }}</p>
               </div>

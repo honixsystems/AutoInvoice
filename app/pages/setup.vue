@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen flex flex-col items-center justify-center bg-gray-50">
     <div class="container mx-auto px-4 py-8">
       <InitialSetup v-if="!isConfigured" />
       <div v-else class="text-center py-12">

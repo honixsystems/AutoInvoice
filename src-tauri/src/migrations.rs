@@ -155,6 +155,44 @@ pub fn get_migrations() -> Vec<Migration> {
                 ALTER TABLE factures ADD COLUMN cancelled BOOLEAN DEFAULT FALSE;
             ",
             kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 9,
+            description: "add_garage_services_table",
+            sql: "
+                -- Création de la table garage_services
+                CREATE TABLE IF NOT EXISTS garage_services (
+                    id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    description TEXT,
+                    price REAL NOT NULL,
+                    duration REAL,
+                    date_creation TEXT NOT NULL,
+                    date_modification TEXT NOT NULL
+                );
+            ",
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 10,
+            description: "update_garage_services_pricing",
+            sql: "
+                -- Ajout de la colonne pricing_type
+                ALTER TABLE garage_services ADD COLUMN pricing_type TEXT NOT NULL DEFAULT 'fixed';
+                
+                -- Suppression de la colonne duration
+                ALTER TABLE garage_services DROP COLUMN duration;
+            ",
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 11,
+            description: "add_garage_services_date_deletion",
+            sql: "
+                -- Ajout de la colonne date_deletion
+                ALTER TABLE garage_services ADD COLUMN date_deletion TEXT;
+            ",
+            kind: MigrationKind::Up,
         }
     ]
 }

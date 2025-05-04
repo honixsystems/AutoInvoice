@@ -1,6 +1,6 @@
 [package]
 name = "autoinvoice"
-version = "1.4.3"
+version = "1.4.4"
 description = "Invoicing tool"
 authors = [ "Gwenaël HUBLER" ]
 license = "MIT"

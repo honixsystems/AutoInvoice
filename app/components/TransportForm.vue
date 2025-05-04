@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-4xl mx-auto p-6">
+  <div class="mx-auto p-6">
     <UStepper disabled v-model="currentStep" :items="steps" class="w-full">
       <template #client>
         <div class="space-y-4 w-full">

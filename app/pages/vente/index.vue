@@ -9,16 +9,14 @@ const backHome = () => {
 </script>
 
 <template>
-  <div class="container mx-auto py-4 max-w-4xl">
-    <UButton
-      color="neutral"
-      variant="ghost"
-      @click="backHome"
-      class="mb-4"
-    >
-      <UIcon name="i-heroicons-arrow-left" class="mr-2" />
-      Retour à l'accueil
-    </UButton>
+  <div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-8">
+      <h1 class="text-3xl font-bold text-gray-900">Nouvelle vente</h1>
+      <UButton @click="backHome">
+        <UIcon name="i-heroicons-arrow-left" class="mr-2" />
+        Retour à l'accueil
+      </UButton>
+    </div>
     <VenteForm />
   </div>
 </template>

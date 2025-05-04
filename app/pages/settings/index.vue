@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import type { TabsItem } from '@nuxt/ui'
+import { useSettings } from '~/composables/useSettings'
+import GarageSettings from '~/components/GarageSettings.vue'
 
 const isSaving = ref(false)
 const router = useRouter()
 let savingTimeout: NodeJS.Timeout | null = null
+const { appSettings } = useSettings()
 
 const items = ref<TabsItem[]>([
   {
@@ -14,8 +17,32 @@ const items = ref<TabsItem[]>([
   {
     label: 'Application',
     slot: 'app'
-  }
+  },
+  ...(appSettings.value?.enableGarage ? [{
+    label: 'Mon garage',
+    slot: 'garage'
+  }] : [])
 ])
+
+// Mettre à jour les items quand appSettings change
+watch(appSettings, (newSettings) => {
+  if (newSettings) {
+    items.value = [
+      {
+        label: 'Mon entreprise',
+        slot: 'company'
+      },
+      {
+        label: 'Application',
+        slot: 'app'
+      },
+      ...(newSettings.enableGarage ? [{
+        label: 'Mon garage',
+        slot: 'garage'
+      }] : [])
+    ]
+  }
+}, { deep: true })
 
 // Fonction pour gérer l'état de l'enregistrement avec un délai minimum
 const handleSavingState = (saving: boolean) => {
@@ -69,6 +96,12 @@ const handleSavingState = (saving: boolean) => {
           <div class="flex-1">
             <h2 class="text-2xl font-bold mb-6">{{ item.label }}</h2>
             <AppSettings @saving="handleSavingState" />
+          </div>
+        </template>
+        <template v-if="appSettings?.enableGarage" #garage="{ item }">
+          <div class="flex-1">
+            <h2 class="text-2xl font-bold mb-6">{{ item.label }}</h2>
+            <GarageSettings @saving="handleSavingState" />
           </div>
         </template>
       </UTabs>

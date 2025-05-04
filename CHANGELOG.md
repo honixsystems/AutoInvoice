@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.4] - 2025-05-04
+- Amélioration de l'interface de configuration
+- Amélioration de l'interface d'accueil
+- Amélioration de l'interface de génération de factures
+- Début de développement de la facturation de garage
+
 ## [1.4.3] - 2025-04-26
 - Ajout de la pagination sur les factures et les clients
 - Résolution d'un problème concernant les couleurs de l'application

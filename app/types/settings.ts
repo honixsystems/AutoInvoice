@@ -17,6 +17,7 @@ export interface CompanySettings {
 export interface AppSettings {
     enableVente: boolean
     enableTransport: boolean
+    enableGarage: boolean
 }
 
 // Type pour les fonctionnalités disponibles
