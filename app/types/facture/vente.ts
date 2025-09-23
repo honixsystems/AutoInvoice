@@ -48,8 +48,8 @@ export class FactureVente extends FactureBase {
         };
     }
 
-    override toTypst(companySettings: CompanySettings): TemplateVente {
-        const base = super.toTypst(companySettings);
+    override toTypst(companySettings: CompanySettings, vatSettings?: { displayVAT: boolean; vatRate: number }): TemplateVente {
+        const base = super.toTypst(companySettings, vatSettings);
         return {
             ...base,
             vehicle: {

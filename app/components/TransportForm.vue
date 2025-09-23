@@ -100,6 +100,7 @@ import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
 import type { StepperItem } from '@nuxt/ui'
 import { useFactures } from '~/composables/useFactures'
+import { useSettings } from '~/composables/useSettings'
 import { useRouter } from 'vue-router'
 
 const transportSchema = z.object({
@@ -167,6 +168,7 @@ const props = defineProps<{
 }>()
 
 const { addFacture, updateFacture, getFacture } = useFactures()
+const { appSettings } = useSettings()
 
 const selectedClientId = ref<string>()
 const currentFactureId = ref<string>()
@@ -175,7 +177,20 @@ const isEditingClient = ref(false)
 
 const router = useRouter()
 
+// Initialiser les valeurs par défaut avec les paramètres de transport
+const initializeDefaults = () => {
+  const transportSettings = appSettings.value?.transportSettings
+  if (transportSettings) {
+    state.price_per_km = transportSettings.pricePerKm || 1
+    state.pickup_price = 15 // Valeur par défaut pour le pickup
+    state.additional_notes = transportSettings.defaultMention || ''
+  }
+}
+
 onMounted(async () => {
+  // Initialiser les valeurs par défaut
+  initializeDefaults()
+  
   if (props.factureId) {
     const facture = await getFacture(props.factureId)
     if (facture && facture.type === 'transport') {

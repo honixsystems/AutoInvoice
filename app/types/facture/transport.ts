@@ -35,8 +35,8 @@ export class FactureTransport extends FactureBase {
         };
     }
 
-    override toTypst(companySettings: CompanySettings): TemplateTransport {
-        const base = super.toTypst(companySettings);
+    override toTypst(companySettings: CompanySettings, vatSettings?: { displayVAT: boolean; vatRate: number }): TemplateTransport {
+        const base = super.toTypst(companySettings, vatSettings);
         return {
             ...base,
             transport: {

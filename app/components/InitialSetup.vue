@@ -103,28 +103,6 @@
             </div>
           </div>
 
-          <!-- Section TVA -->
-          <div class="space-y-6 mt-12">
-            <div class="flex flex-col">
-              <h3 class="text-lg font-semibold text-gray-900">Paramètres TVA</h3>
-              <p class="text-sm text-gray-500">Configurez l'affichage et le calcul de la TVA</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <UFormField label="Activer la TVA" name="displayVAT" class="md:col-span-2">
-                <USwitch v-model="companyState.displayVAT" />
-              </UFormField>
-
-              <UFormField 
-                v-if="companyState.displayVAT"
-                label="Taux de TVA (%)" 
-                name="vatRate"
-                class="md:col-span-2"
-              >
-                <UInput v-model="companyState.vatRate" type="number" min="0" max="100" step="0.1" class="w-full" />
-              </UFormField>
-            </div>
-          </div>
         </UForm>
       </template>
 
@@ -238,8 +216,6 @@ const companySchema = z.object({
   phoneNumber: z.string().min(1, 'Le numéro de téléphone est requis'),
   address: z.string().min(1, 'L\'adresse est requise'),
   vatNumber: z.string().min(1, 'Le numéro de TVA est requis'),
-  vatRate: z.number().min(0).max(100).step(0.1, 'Le taux de TVA doit être entre 0 et 100'),
-  displayVAT: z.boolean(),
   logoUrl: z.string().optional(),
   iban: z.string().regex(/^[A-Z]{2}[0-9A-Z]+$/, 'Format IBAN invalide'),
   bic: z.string().regex(/^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/, 'Format BIC invalide'),
@@ -266,8 +242,6 @@ const companyState = reactive<Partial<CompanySettings>>({
   phoneNumber: '',
   address: '',
   vatNumber: '',
-  vatRate: 20,
-  displayVAT: false,
   logoUrl: undefined,
   iban: '',
   bic: '',
@@ -276,9 +250,10 @@ const companyState = reactive<Partial<CompanySettings>>({
   primaryColor: '#000000'
 })
 
-const appState = reactive<Partial<AppSettings>>({
+const appState = reactive<Pick<AppSettings, 'enableVente' | 'enableTransport' | 'enableGarage'>>({
   enableVente: true,
-  enableTransport: true
+  enableTransport: true,
+  enableGarage: false
 })
 
 const licenseState = reactive<Partial<LicenseFormSchema>>({
@@ -316,7 +291,7 @@ const steps: StepperItem[] = [
   }
 ]
 
-const features: { name: keyof AppSettings; label: string; description: string; icon: string; color: 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' }[] = [
+const features: { name: 'enableVente' | 'enableTransport' | 'enableGarage'; label: string; description: string; icon: string; color: 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral' }[] = [
   {
     name: 'enableVente',
     label: 'Facturation de vente',
@@ -387,9 +362,35 @@ const finishSetup = async () => {
       await writeFile('logo.png', companySettings.value.logoData, { baseDir: BaseDirectory.AppLocalData })
     }
 
-    // Sauvegarder les paramètres de l'application
+    // Sauvegarder les paramètres de l'application avec les paramètres spécifiques par défaut
+    const fullAppSettings: AppSettings = {
+      ...appState,
+      transportSettings: {
+        pricePerKm: 1,
+        defaultMention: '',
+        vat: {
+          vatRate: 20,
+          displayVAT: true
+        }
+      },
+      venteSettings: {
+        defaultMention: '',
+        vat: {
+          vatRate: 20,
+          displayVAT: true
+        }
+      },
+      garageSettings: {
+        defaultMention: '',
+        vat: {
+          vatRate: 20,
+          displayVAT: true
+        }
+      }
+    }
+    
     const appStore = await Store.load('app-settings.json')
-    await appStore.set('settings', appState)
+    await appStore.set('settings', fullAppSettings)
     await appStore.save()
 
     // Recharger les paramètres

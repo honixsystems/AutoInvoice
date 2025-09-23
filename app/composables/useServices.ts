@@ -25,7 +25,18 @@ export function useServices() {
         "SELECT * FROM garage_services WHERE date_deletion IS NULL ORDER BY name ASC"
       )
 
-      return result.map(service => new Service(service))
+      return result.map(service => {
+        // Parse VAT settings from JSON string
+        const serviceWithVat = {
+          ...service,
+          vat: service.vat ? JSON.parse(service.vat) : {
+            vatRate: 20,
+            vatNumber: '',
+            displayVAT: true
+          }
+        }
+        return new Service(serviceWithVat)
+      })
     } catch (e) {
       console.error('Erreur lors du chargement des services:', e)
       return []
@@ -42,7 +53,18 @@ export function useServices() {
         "SELECT * FROM garage_services WHERE date_deletion IS NOT NULL ORDER BY name ASC"
       )
 
-      return result.map(service => new Service(service))
+      return result.map(service => {
+        // Parse VAT settings from JSON string
+        const serviceWithVat = {
+          ...service,
+          vat: service.vat ? JSON.parse(service.vat) : {
+            vatRate: 20,
+            vatNumber: '',
+            displayVAT: true
+          }
+        }
+        return new Service(serviceWithVat)
+      })
     } catch (e) {
       console.error('Erreur lors du chargement des services supprimés:', e)
       return []
@@ -61,9 +83,9 @@ export function useServices() {
 
       await db.value!.execute(
         `INSERT INTO garage_services (
-          id, name, description, price, pricing_type, date_creation, date_modification
+          id, name, description, price, pricing_type, vat, date_creation, date_modification
         ) VALUES (
-          ?, ?, ?, ?, ?, ?, ?
+          ?, ?, ?, ?, ?, ?, ?, ?
         )`,
         [
           id,
@@ -71,6 +93,7 @@ export function useServices() {
           service.description,
           service.price,
           service.pricing_type,
+          JSON.stringify(service.vat),
           now,
           now
         ]
@@ -97,6 +120,7 @@ export function useServices() {
           description = ?,
           price = ?,
           pricing_type = ?,
+          vat = ?,
           date_modification = ?
         WHERE id = ?`,
         [
@@ -104,6 +128,7 @@ export function useServices() {
           service.description,
           service.price,
           service.pricing_type,
+          JSON.stringify(service.vat),
           now,
           id
         ]
@@ -159,7 +184,16 @@ export function useServices() {
 
       if (result.length === 0 || !result[0]) return undefined
 
-      return new Service(result[0])
+      // Parse VAT settings from JSON string
+      const serviceWithVat = {
+        ...result[0],
+        vat: result[0].vat ? JSON.parse(result[0].vat) : {
+          vatRate: 20,
+          vatNumber: '',
+          displayVAT: true
+        }
+      }
+      return new Service(serviceWithVat)
     } catch (e) {
       console.error('Erreur lors de la récupération du service:', e)
       throw e

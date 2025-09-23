@@ -19,7 +19,7 @@ const factures = useFactures()
 const facture = ref<Facture | null>(null)
 
 const { generateAndSavePdf } = useTypst()
-const { companySettings } = useSettings()
+const { companySettings, appSettings } = useSettings()
 const toast = useToast()
 
 onMounted(async () => {
@@ -58,11 +58,13 @@ const handleGeneratePdf = async () => {
 
         if (facture.value.type === 'vente') {
             const venteFacture = facture.value as FactureVente
-            const typstData = venteFacture.toTypst(companySettings.value)
+            const vatSettings = appSettings.value?.venteSettings?.vat
+            const typstData = venteFacture.toTypst(companySettings.value, vatSettings)
             await generateAndSavePdf(facture.value.type, typstData)
         } else {
             const transportFacture = facture.value as FactureTransport
-            const typstData = transportFacture.toTypst(companySettings.value)
+            const vatSettings = appSettings.value?.transportSettings?.vat
+            const typstData = transportFacture.toTypst(companySettings.value, vatSettings)
             await generateAndSavePdf(facture.value.type, typstData)
         }
     } catch (error) {

@@ -40,7 +40,11 @@ export class FactureBase {
         };
     }
 
-    toTypst(companySettings: CompanySettings): { config: TemplateConfig; biller: TemplateBiller; recipient: TemplateRecipient } {
+    toTypst(companySettings: CompanySettings, vatSettings?: { displayVAT: boolean; vatRate: number }): { config: TemplateConfig; biller: TemplateBiller; recipient: TemplateRecipient } {
+        // Utiliser les paramètres TVA spécifiques si fournis, sinon utiliser des valeurs par défaut
+        const displayVat = vatSettings?.displayVAT ?? true
+        const vatRate = vatSettings?.vatRate ?? 20
+        
         return {
             config: {
                 language: 'fr',
@@ -48,8 +52,8 @@ export class FactureBase {
                 primaryColor: companySettings.primaryColor,
                 date: formatDateForTypst(new Date(this.date_creation)),
                 invoiceId: this.id_comptable,
-                displayVat: companySettings.displayVAT,
-                vatRate: companySettings.vatRate,
+                displayVat,
+                vatRate,
                 cancellation: this.cancelled === 1,
                 footerText: companySettings.footerNote || '',
                 cgv: companySettings.cgv || ''

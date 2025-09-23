@@ -19,6 +19,8 @@
 
 <script setup lang="ts">
 import type { Facture } from '~/types/facture/common'
+import type { FactureVente } from '~/types/facture/vente'
+import type { FactureTransport } from '~/types/facture/transport'
 import { useTypst } from '~/composables/useTypst'
 import { ref, onMounted, watch } from 'vue'
 import { useSettings } from '~/composables/useSettings'
@@ -30,7 +32,7 @@ const props = defineProps<{
 const pdfUrl = ref<string | null>(null)
 const isLoading = ref(true)
 const { generatePdf } = useTypst()
-const { companySettings, loadSettings } = useSettings()
+const { companySettings, appSettings, loadSettings } = useSettings()
 const errorMessage = ref<string | null>(null)
 
 const generatePreview = async () => {
@@ -45,7 +47,16 @@ const generatePreview = async () => {
       }
     }
     
-    const typstData = props.facture.toTypst(companySettings.value)
+    let typstData
+    if (props.facture.type === 'vente') {
+      const venteFacture = props.facture as FactureVente
+      const vatSettings = appSettings.value?.venteSettings?.vat
+      typstData = venteFacture.toTypst(companySettings.value, vatSettings)
+    } else {
+      const transportFacture = props.facture as FactureTransport
+      const vatSettings = appSettings.value?.transportSettings?.vat
+      typstData = transportFacture.toTypst(companySettings.value, vatSettings)
+    }
     const pdfData = await generatePdf(props.facture.type, typstData)
     const blob = new Blob([new Uint8Array(pdfData)], { type: 'application/pdf' })
     pdfUrl.value = URL.createObjectURL(blob)

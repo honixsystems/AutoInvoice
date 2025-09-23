@@ -13,12 +13,10 @@ const schema = z.object({
   companyName: z.string().min(1, 'Le nom de l\'entreprise est requis'),
   phoneNumber: z.string().min(1, 'Le numéro de téléphone est requis'),
   address: z.string().min(1, 'L\'adresse est requise'),
+  vatNumber: z.string().min(1, 'Le numéro de TVA est requis'),
   footerNote: z.string().optional(),
   cgv: z.string().optional(),
   primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Couleur hexadécimale invalide'),
-  displayVAT: z.boolean().optional(),
-  vatRate: z.number().min(0).max(100).step(0.1, 'Le taux de TVA doit être entre 0 et 100'),
-  vatNumber: z.string().min(1, 'Le numéro de TVA est requis'),
   logoUrl: z.string().optional(),
   iban: z.string().regex(/^[A-Z]{2}[0-9A-Z]+$/, 'Format IBAN invalide'),
   bic: z.string().regex(/^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/, 'Format BIC invalide')
@@ -30,13 +28,11 @@ const state = reactive<Partial<Schema>>({
   companyName: undefined,
   phoneNumber: undefined,
   address: undefined,
+  vatNumber: undefined,
   footerNote: undefined,
   cgv: undefined,
   primaryColor: '#000000',
-  vatRate: 20,
-  vatNumber: undefined,
   logoUrl: undefined,
-  displayVAT: false,
   iban: undefined,
   bic: undefined
 })
@@ -210,28 +206,6 @@ watch(state, async (newState) => {
         </div>
       </div>
 
-      <!-- Section TVA -->
-      <div class="space-y-6">
-        <div class="flex flex-col">
-          <h3 class="text-lg font-semibold text-gray-900">Paramètres TVA</h3>
-          <p class="text-sm text-gray-500">Configurez l'affichage et le calcul de la TVA</p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <UFormField label="Activer la TVA" name="displayVAT" class="md:col-span-2">
-            <USwitch v-model="state.displayVAT" />
-          </UFormField>
-
-          <UFormField 
-            v-if="state.displayVAT"
-            label="Taux de TVA (%)" 
-            name="vatRate"
-            class="md:col-span-2"
-          >
-            <UInput v-model="state.vatRate" type="number" min="0" max="100" step="0.1" class="w-full" />
-          </UFormField>
-        </div>
-      </div>
     </div>
   </UForm>
 </template>

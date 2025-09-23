@@ -3,6 +3,8 @@ import { ref, onMounted, watch } from 'vue'
 import type { TabsItem } from '@nuxt/ui'
 import { useSettings } from '~/composables/useSettings'
 import GarageSettings from '~/components/GarageSettings.vue'
+import VenteSettings from '~/components/VenteSettings.vue'
+import TransportSettings from '~/components/TransportSettings.vue'
 
 const isSaving = ref(false)
 const router = useRouter()
@@ -18,6 +20,14 @@ const items = ref<TabsItem[]>([
     label: 'Application',
     slot: 'app'
   },
+  ...(appSettings.value?.enableVente ? [{
+    label: 'Paramètres de vente',
+    slot: 'vente'
+  }] : []),
+  ...(appSettings.value?.enableTransport ? [{
+    label: 'Paramètres de transport',
+    slot: 'transport'
+  }] : []),
   ...(appSettings.value?.enableGarage ? [{
     label: 'Mon garage',
     slot: 'garage'
@@ -36,6 +46,14 @@ watch(appSettings, (newSettings) => {
         label: 'Application',
         slot: 'app'
       },
+      ...(newSettings.enableVente ? [{
+        label: 'Paramètres de vente',
+        slot: 'vente'
+      }] : []),
+      ...(newSettings.enableTransport ? [{
+        label: 'Paramètres de transport',
+        slot: 'transport'
+      }] : []),
       ...(newSettings.enableGarage ? [{
         label: 'Mon garage',
         slot: 'garage'
@@ -96,6 +114,18 @@ const handleSavingState = (saving: boolean) => {
           <div class="flex-1">
             <h2 class="text-2xl font-bold mb-6">{{ item.label }}</h2>
             <AppSettings @saving="handleSavingState" />
+          </div>
+        </template>
+        <template v-if="appSettings?.enableVente" #vente="{ item }">
+          <div class="flex-1">
+            <h2 class="text-2xl font-bold mb-6">{{ item.label }}</h2>
+            <VenteSettings @saving="handleSavingState" />
+          </div>
+        </template>
+        <template v-if="appSettings?.enableTransport" #transport="{ item }">
+          <div class="flex-1">
+            <h2 class="text-2xl font-bold mb-6">{{ item.label }}</h2>
+            <TransportSettings @saving="handleSavingState" />
           </div>
         </template>
         <template v-if="appSettings?.enableGarage" #garage="{ item }">

@@ -21,7 +21,66 @@ const loadSettings = async () => {
     const appStore = await Store.load('app-settings.json')
     const savedAppSettings = await appStore.get('settings')
     if (savedAppSettings) {
-      appSettings.value = savedAppSettings as AppSettings
+      const settings = savedAppSettings as AppSettings
+      // Migration : s'assurer que les paramètres spécifiques existent
+      if (!settings.transportSettings) {
+        settings.transportSettings = {
+          pricePerKm: 1,
+          defaultMention: '',
+          vat: {
+            vatRate: 20,
+            displayVAT: true
+          }
+        }
+      }
+      if (!settings.venteSettings) {
+        settings.venteSettings = {
+          defaultMention: '',
+          vat: {
+            vatRate: 20,
+            displayVAT: true
+          }
+        }
+      }
+      if (!settings.garageSettings) {
+        settings.garageSettings = {
+          defaultMention: '',
+          vat: {
+            vatRate: 20,
+            displayVAT: true
+          }
+        }
+      }
+      appSettings.value = settings
+    } else {
+      // Initialiser avec des valeurs par défaut
+      appSettings.value = {
+        enableVente: true,
+        enableTransport: true,
+        enableGarage: false,
+        transportSettings: {
+          pricePerKm: 1,
+          defaultMention: '',
+          vat: {
+            vatRate: 20,
+            displayVAT: true
+          }
+        },
+        venteSettings: {
+          defaultMention: '',
+          vat: {
+            vatRate: 20,
+            displayVAT: true
+          }
+        },
+        garageSettings: {
+          defaultMention: '',
+          vat: {
+            vatRate: 20,
+            displayVAT: true
+          }
+        }
+      }
     }
 
     // Charger le logo

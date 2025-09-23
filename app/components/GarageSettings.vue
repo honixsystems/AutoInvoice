@@ -1,11 +1,19 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useServices } from '~/composables/useServices'
+import { useSettings } from '~/composables/useSettings'
 import type { Service } from '~/types/service'
+import type { GarageSettings } from '~/types/settings'
 import ServiceCardSettings from '~/components/ServiceCardSettings.vue'
 import EmptyState from '~/components/EmptyState.vue'
+import VATSettings from '~/components/VATSettings.vue'
+
+const emit = defineEmits<{
+  saving: [boolean]
+}>()
 
 const { loadServices, loadDeletedServices, addService, updateService, deleteService, restoreService } = useServices()
+const { appSettings } = useSettings()
 const services = ref<Service[]>([])
 const deletedServices = ref<Service[]>([])
 const isNewServiceModalOpen = ref(false)
@@ -13,6 +21,31 @@ const isDeleteConfirmModalOpen = ref(false)
 const serviceToDelete = ref<string | null>(null)
 const editingServiceId = ref<string | undefined>(undefined)
 const toast = useToast()
+
+// Paramètres du garage
+const garageSettings = computed<GarageSettings>({
+  get: () => appSettings.value?.garageSettings || {
+    defaultMention: '',
+    vat: {
+      vatRate: 20,
+      displayVAT: true
+    }
+  },
+  set: (value) => {
+    if (!appSettings.value) return
+    appSettings.value.garageSettings = value
+  }
+})
+
+// Watcher pour gérer l'état de sauvegarde
+watch(garageSettings, (newSettings) => {
+  if (newSettings) {
+    emit('saving', true)
+    setTimeout(() => {
+      emit('saving', false)
+    }, 1000)
+  }
+}, { deep: true })
 
 onMounted(async () => {
   await loadAllServices()
@@ -86,6 +119,27 @@ const handleRestoreService = async (id: string) => {
 <template>
   <div class="space-y-16">
     <div class="grid grid-cols-1 gap-12">
+      <!-- Section Paramètres généraux -->
+      <div class="space-y-6">
+        <div class="flex flex-col">
+          <h3 class="text-lg font-semibold text-gray-900">Paramètres généraux</h3>
+          <p class="text-sm text-gray-500">Configurez les paramètres par défaut du garage</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <UFormField label="Mention par défaut" name="defaultMention" class="md:col-span-2">
+            <UTextarea 
+              v-model="garageSettings.defaultMention" 
+              placeholder="Services de garage..."
+              class="w-full" 
+            />
+          </UFormField>
+        </div>
+
+        <!-- Paramètres TVA -->
+        <VATSettings v-model="garageSettings.vat" />
+      </div>
+
       <!-- Section Services -->
       <div class="space-y-6">
         <div class="flex items-center justify-between">

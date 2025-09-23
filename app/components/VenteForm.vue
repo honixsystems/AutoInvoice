@@ -156,6 +156,7 @@ import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
 import type { StepperItem } from '@nuxt/ui'
 import { useFactures } from '~/composables/useFactures'
+import { useSettings } from '~/composables/useSettings'
 import { useRouter } from 'vue-router'
 
 const props = defineProps<{
@@ -171,7 +172,16 @@ defineShortcuts({
 })
 
 const { addFacture, updateFacture, getFacture } = useFactures()
+const { appSettings } = useSettings()
 const router = useRouter()
+
+// Initialiser les valeurs par défaut avec les paramètres de vente
+const initializeDefaults = () => {
+  const venteSettings = appSettings.value?.venteSettings
+  if (venteSettings) {
+    state.additional_notes = venteSettings.defaultMention || ''
+  }
+}
 
 const clientSchema = z.object({
   client_name: z.string().min(1, 'Le nom du client est requis'),
@@ -269,6 +279,9 @@ const toast = useToast()
 
 // Charger la facture existante si un ID est fourni
 onMounted(async () => {
+  // Initialiser les valeurs par défaut
+  initializeDefaults()
+  
   if (props.factureId) {
     const facture = await getFacture(props.factureId)
     if (facture && facture.type === 'vente') {

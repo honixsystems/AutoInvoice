@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.5.0] - 2025-09-23
+- Ajout du paramètrage de la facturation de vente
+- Ajout du paramètrage de la facturation de transport
+
 ## [1.4.4] - 2025-05-04
 - Amélioration de l'interface de configuration
 - Amélioration de l'interface d'accueil

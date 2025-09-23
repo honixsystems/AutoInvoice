@@ -193,6 +193,15 @@ pub fn get_migrations() -> Vec<Migration> {
                 ALTER TABLE garage_services ADD COLUMN date_deletion TEXT;
             ",
             kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 12,
+            description: "add_vat_to_garage_services",
+            sql: "
+                -- Ajout de la colonne vat pour les paramètres TVA par service
+                ALTER TABLE garage_services ADD COLUMN vat TEXT DEFAULT '{\"vatRate\":20,\"vatNumber\":\"\",\"displayVAT\":true}';
+            ",
+            kind: MigrationKind::Up,
         }
     ]
 }
