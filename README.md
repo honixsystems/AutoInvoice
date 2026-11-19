@@ -8,9 +8,23 @@ L'application fonctionne entièrement en local : aucun compte, aucune activation
 
 Les installeurs sont publiés sur la page [Releases](https://github.com/honixsystems/AutoInvoice/releases/latest).
 
-- **Windows** : `AutoInvoice_<version>_x64-setup.exe` (ou `AutoInvoice_<version>_x64_en-US.msi`)
+- **Windows** : `AutoInvoice_<version>_x64_en-US.msi` (recommandé, c'est le format utilisé par les mises à jour automatiques) ou `AutoInvoice_<version>_x64-setup.exe`
 
 Une fois installée, l'application se met à jour automatiquement à partir des releases GitHub.
+
+### Réinstaller ou mettre à jour à la main
+
+Lancer le nouvel installeur directement, sans désinstaller l'ancienne version : il la remplace et conserve toutes les données.
+
+Les données ne sont pas stockées dans le dossier d'installation mais dans le profil utilisateur :
+
+| Contenu | Emplacement (Windows) |
+| --- | --- |
+| Base de données (clients, factures, services) | `%APPDATA%\com.honix.autoinvoice\autoinvoice.db` |
+| Paramètres de l'entreprise et de l'application | `%APPDATA%\com.honix.autoinvoice\*.json` |
+| Logo | `%LOCALAPPDATA%\com.honix.autoinvoice\logo.png` |
+
+Pour sauvegarder, il suffit de copier ces deux dossiers `com.honix.autoinvoice`. En cas de désinstallation avec l'installeur `.exe`, ne pas cocher « Supprimer les données de l'application ».
 
 ## Développement
 
