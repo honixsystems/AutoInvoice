@@ -1,0 +1,47 @@
+name: legacy-updater-bridge
+
+# TRANSITION TEMPORAIRE, à lancer à la main (onglet Actions > legacy-updater-bridge > Run workflow).
+#
+# Les versions <= 1.5.0 déjà installées cherchent leurs mises à jour sur l'ancien
+# endpoint Azure (autohubs3/autoinvoice-releases/latest.json). Ce workflow y recopie
+# le latest.json d'une release GitHub. Ses URLs pointent vers les installeurs
+# hébergés sur GitHub, donc les anciennes installations se mettent à jour vers cette
+# version, qui lit ensuite directement les releases GitHub.
+#
+# Une fois tous les clients migrés, supprime ce fichier, les secrets AZURE_* et le
+# stockage Azure.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag de la release à servir aux anciennes versions (ex : autoinvoice-v1.6.0)"
+        required: true
+
+jobs:
+  bridge:
+    name: Publish latest.json on the legacy Azure endpoint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      AZURE_STORAGE_ACCOUNT_KEY: ${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }}
+      TAG: ${{ inputs.tag }}
+
+    steps:
+      - name: Download latest.json from the GitHub release
+        run: gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern latest.json
+
+      - name: Show manifest
+        run: cat latest.json
+
+      - name: Upload latest.json to Azure Blob Storage
+        run: |
+          az storage blob upload \
+            --account-name "autohubs3" \
+            --account-key "$AZURE_STORAGE_ACCOUNT_KEY" \
+            --container-name autoinvoice-releases \
+            --name "latest.json" \
+            --file "latest.json" \
+            --overwrite

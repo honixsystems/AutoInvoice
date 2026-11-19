@@ -106,21 +106,6 @@
         </UForm>
       </template>
 
-      <template #license>
-        <UForm ref="licenseFormRef" :schema="licenseSchema" :state="licenseState" class="space-y-6">
-          <div class="space-y-6">
-            <div class="flex flex-col">
-              <h3 class="text-lg font-semibold text-gray-900">Licence</h3>
-              <p class="text-sm text-gray-500">Entrez votre clé de licence pour activer l'application</p>
-            </div>
-
-            <UFormField label="Clé de licence" name="licenseKey">
-              <UInput v-model="licenseState.licenseKey" placeholder="Entrez votre clé de licence" class="w-full" />
-            </UFormField>
-          </div>
-        </UForm>
-      </template>
-
       <template #features>
         <UForm ref="featuresFormRef" :schema="appSchema" :state="appState" class="space-y-6">
           <div class="space-y-6">
@@ -175,7 +160,7 @@
       <UButton
         size="lg"
         class="w-full flex justify-center items-center"
-        v-if="currentStep < 3"
+        v-if="currentStep < 2"
         color="primary"
         @click="nextStep"
       >
@@ -184,7 +169,7 @@
       <UButton
         size="lg"
         class="w-full flex justify-center items-center"
-        v-if="currentStep === 3"
+        v-if="currentStep === 2"
         color="primary"
         @click="finishSetup"
       >
@@ -201,7 +186,6 @@ import type { StepperItem } from '@nuxt/ui'
 import { Store } from '@tauri-apps/plugin-store'
 import { BaseDirectory, writeFile } from '@tauri-apps/plugin-fs'
 import { useSettings } from '~/composables/useSettings'
-import { setLicenseKey } from '~/utils/license'
 import LogoUploader from './LogoUploader.vue'
 import type { CompanySettings, AppSettings } from '~/types/settings'
 
@@ -229,13 +213,8 @@ const appSchema = z.object({
   enableTransport: z.boolean()
 })
 
-const licenseSchema = z.object({
-  licenseKey: z.string().min(1, 'La clé de licence est requise')
-})
-
 type CompanyFormSchema = z.output<typeof companySchema>
 type AppFormSchema = z.output<typeof appSchema>
-type LicenseFormSchema = z.output<typeof licenseSchema>
 
 const companyState = reactive<Partial<CompanySettings>>({
   companyName: '',
@@ -256,21 +235,10 @@ const appState = reactive<Pick<AppSettings, 'enableVente' | 'enableTransport' | 
   enableGarage: false
 })
 
-const licenseState = reactive<Partial<LicenseFormSchema>>({
-  licenseKey: undefined
-})
-
 const currentStep = ref(0)
 const companyFormRef = ref()
-const licenseFormRef = ref()
 
 const steps: StepperItem[] = [
-  {
-    slot: 'license',
-    title: 'Licence',
-    description: 'Activation de la licence',
-    icon: 'i-heroicons-key'
-  },
   {
     slot: 'company',
     title: 'Entreprise',
@@ -318,19 +286,6 @@ const nextStep = async () => {
   let isValid = true
   console.log('currentStep', currentStep.value);
   if (currentStep.value === 0) {
-    isValid = await licenseFormRef.value?.validate()
-    if (isValid && licenseState.licenseKey) {
-      const result = await setLicenseKey(licenseState.licenseKey)
-      if (!result.valid) {
-        toast.add({
-          title: 'Erreur de licence',
-          description: result.message,
-          color: 'error'
-        })
-        return
-      }
-    }
-  } else if (currentStep.value === 1) {
     console.log('companyFormRef', companyFormRef.value);
     isValid = await companyFormRef.value?.validate()
     console.log('isValid', isValid);
@@ -338,7 +293,7 @@ const nextStep = async () => {
 
   if (!isValid) return
 
-  if (currentStep.value === 2) {
+  if (currentStep.value === 1) {
     await finishSetup()
     return
   }

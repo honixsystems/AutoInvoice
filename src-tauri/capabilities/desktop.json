@@ -87,14 +87,6 @@
           "path": "/**/*"
         }
       ]
-    },
-    {
-      "identifier": "http:default",
-      "allow": [
-        {
-          "url": "https://autoinvoice-license.azurewebsites.net/**/*"
-        }
-      ]
     }
   ]
 }

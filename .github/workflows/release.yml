@@ -1,15 +1,25 @@
 name: release
 
+# Chaque push sur main construit l'application et publie (ou met à jour) la release
+# GitHub "autoinvoice-v<version>". Les installeurs, leurs signatures et le fichier
+# latest.json utilisé par l'auto-update sont attachés à cette release.
+# L'application lit : https://github.com/honixsystems/AutoInvoice/releases/latest/download/latest.json
+
 on:
   push:
     branches:
       - main
+    paths-ignore:
+      - README.md
+      - LICENSE
+  workflow_dispatch:
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
   build-tauri:
-    outputs:
-      releaseId: ${{ steps.tauri.outputs.releaseId }}
-      appVersion: ${{ steps.version.outputs.version }}
     permissions:
       contents: write
     strategy:
@@ -39,7 +49,7 @@ jobs:
           version: 10.6.2
 
       - name: Cache pnpm store
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.pnpm-store
           key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
@@ -61,7 +71,7 @@ jobs:
           sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
       - name: Cache cargo registry + target
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/registry
@@ -89,14 +99,10 @@ jobs:
         run: |
           VERSION="${{ env.VERSION }}"
           echo "Extracting changelog for version $VERSION..."
-      
+
           CONTENT=$(awk "/## \[$VERSION\]/ {flag=1; next} /^## \[/ {flag=0} flag" CHANGELOG.md)
           CONTENT=$(echo "$CONTENT" | sed '/^\s*$/d')
-      
-          echo "RELEASE_BODY<<EOF" >> $GITHUB_ENV
-          echo "$CONTENT" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-      
+
           {
             echo "body<<EOF"
             echo "$CONTENT"
@@ -104,7 +110,6 @@ jobs:
           } >> $GITHUB_OUTPUT
 
       - name: Build and release Tauri app
-        id: tauri
         uses: tauri-apps/tauri-action@v0.5.20
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -119,48 +124,3 @@ jobs:
           includeUpdaterJson: true
           includeDebug: true
           args: ${{ matrix.args }}
-
-  upload-to-azure:
-    name: Upload to Azure Blob
-    runs-on: ubuntu-latest
-    needs: build-tauri
-
-    steps:
-      - name: Download from the release
-        uses: robinraju/release-downloader@v1.12
-        with:
-          releaseId: ${{ needs.build-tauri.outputs.releaseId }}
-          fileName: '*'
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Install Azure CLI
-        run: |
-          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-
-      - name: Upload to Azure Blob Storage
-        run: |
-          for file in $(find . -type f ! -name "latest.json"); do
-            filename=$(basename "$file")
-            echo "Uploading $filename to Azure Blob Storage..."
-            az storage blob upload \
-              --account-name "autohubs3" \
-              --account-key "${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }}" \
-              --container-name autoinvoice-releases \
-              --name "autoinvoice-v${{ needs.build-tauri.outputs.appVersion }}/$filename" \
-              --file "$file" \
-              --overwrite
-          done
-
-      - name: Sed latest.json to replace the GitHub release URL with the Azure Blob Storage URL
-        run: |
-          sed -i 's|https://github.com/honixsystems/AutoInvoice/releases/download/autoinvoice-v${{ needs.build-tauri.outputs.appVersion }}|https://autohubs3.blob.core.windows.net/autoinvoice-releases/autoinvoice-v${{ needs.build-tauri.outputs.appVersion }}|' latest.json
-
-      - name: Upload latest.json to Azure Blob Storage
-        run: |
-          az storage blob upload \
-            --account-name "autohubs3" \
-            --account-key "${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }}" \
-            --container-name autoinvoice-releases \
-            --name "latest.json" \
-            --file "latest.json" \
-            --overwrite

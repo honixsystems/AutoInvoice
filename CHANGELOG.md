@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.6.0] - 2026-11-19
+- AutoInvoice devient open source (licence MIT)
+- Suppression du système de licence : plus aucune activation ni connexion à un serveur de licence
+- Les mises à jour automatiques et les téléchargements passent par les releases GitHub
+- Les icônes sont intégrées à l'application, qui fonctionne désormais entièrement hors-ligne
+
 ## [1.5.0] - 2025-09-23
 - Ajout du paramètrage de la facturation de vente
 - Ajout du paramètrage de la facturation de transport
